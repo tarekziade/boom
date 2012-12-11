@@ -18,7 +18,8 @@ classifiers = ["Programming Language :: Python",
 
 
 setup(name='boom',
-      version='0.1',
+      version='0.1.1',
+      url='https://github.com/tarekziade/boom',
       packages=find_packages(),
       description=("Simple HTTP Load tester"),
       author="Tarek Ziade",
