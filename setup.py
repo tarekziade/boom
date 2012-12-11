@@ -1,4 +1,6 @@
 from setuptools import setup, find_packages
+from boom import __version__
+
 
 install_requires = ['gevent', 'requests']
 
@@ -18,7 +20,7 @@ classifiers = ["Programming Language :: Python",
 
 
 setup(name='boom',
-      version='0.1.2',
+      version=__version__,
       url='https://github.com/tarekziade/boom',
       packages=find_packages(),
       long_description=README,
@@ -31,5 +33,5 @@ setup(name='boom',
       install_requires=install_requires,
       entry_points="""
       [console_scripts]
-      boom = boom:main
+      boom = boom._boom:main
       """)
