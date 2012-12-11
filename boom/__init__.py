@@ -1,30 +1,50 @@
 import logging
 import argparse
 import sys
-import os
-from gevent import monkey
-import gevent
-import urllib2
 import time
 
+from gevent import monkey
+import gevent
+import requests
+
+from boom import _patch     # NOQA
+
 logger = logging.getLogger('boom')
-monkey.patch_all()
 
 _stats = []
-
-import requests
 
 
 def clear_stats():
     _stats[:] = []
 
 
-def print_stats():
+def print_stats(total):
+    rps = len(_stats) / total
+    avg = sum(_stats) / len(_stats)
+    amp = max(_stats) - min(_stats)
+
     print('')
+    print('-------- Results --------')
+
     print('Successful calls\t\t%r' % len(_stats))
-    print('Average          \t\t%.4f' % (sum(_stats) / len(_stats)))
-    print('Fastest          \t\t%.4f' % min(_stats))
-    print('Slowest          \t\t%.4f' % max(_stats))
+    print('Average          \t\t%.4f s' % avg)
+    print('Fastest          \t\t%.4f s' % min(_stats))
+    print('Slowest          \t\t%.4f s' % max(_stats))
+    print('Amplitude        \t\t%.4f s' % amp)
+    print('RPS              \t\t%d' % rps)
+    if rps > 500:
+        print('BSI              \t\tWoooooo Fast')
+    elif rps > 100:
+        print('BSI              \t\tPretty good')
+    elif rps > 50:
+        print('BSI              \t\tMeh')
+    else:
+        print('BSI              \t\t Hahahaha')
+
+    print('')
+    print('-------- Legend --------')
+    print('RPS: Request Per Second')
+    print('BSI: Boom Speed Index')
 
 
 def print_server_info(url):
@@ -49,6 +69,7 @@ def run(url, num, method='GET'):
 
 
 def load(url, requests, concurrency):
+    monkey.patch_all()
     clear_stats()
     print_server_info(url)
     sys.stdout.write('Starting the load [')
@@ -58,25 +79,25 @@ def load(url, requests, concurrency):
     finally:
         print('] Done')
 
-    print_stats()
-
 
 def main():
     parser = argparse.ArgumentParser(description='AB For Humans.')
 
-    parser.add_argument('-n', '--requests', help='Number of requests', default=1,
+    parser.add_argument('-n', '--requests', help='Number of requests',
+                        default=1, type=int)
+    parser.add_argument('-c', '--concurrency', help='Concurrency', default=1,
                         type=int)
-
-    parser.add_argument('-c', '--concurrency', help='Concurrency', default=1, type=int)
     parser.add_argument('url', help='URL to hit')
 
     args = parser.parse_args()
+    start = time.time()
     try:
         load(args.url, args.requests, args.concurrency)
     except KeyboardInterrupt:
-        sys.exit(0)
+        pass
     finally:
-        print
+        total = time.time() - start
+        print_stats(total)
         logger.info('Bye!')
 
 
