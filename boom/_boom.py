@@ -64,11 +64,15 @@ def print_server_info(url, method):
     print 'Running %s %s' % (method, url)
 
 
-def onecall(url, method, data, ct):
+def onecall(url, method, data, ct, auth):
     method = getattr(requests, method.lower())
     options = {'headers': {'content-type': ct}}
+
     if data is not None:
         options['data'] = data
+
+    if auth is not None:
+        options['auth'] = auth.split(':', 1)
 
     start = time.time()
     try:
@@ -80,19 +84,19 @@ def onecall(url, method, data, ct):
     sys.stdout.flush()
 
 
-def run(url, num, duration, method, data, ct):
+def run(url, num, duration, method, data, ct, auth):
     if num is not None:
         for i in range(num):
-            onecall(url, method, data, ct)
+            onecall(url, method, data, ct, auth)
             gevent.sleep(0)
     else:
         start = time.time()
         while time.time() - start < duration:
-            onecall(url, method, data, ct)
+            onecall(url, method, data, ct, auth)
             gevent.sleep(0)
 
 
-def load(url, requests, concurrency, duration, method, data, ct):
+def load(url, requests, concurrency, duration, method, data, ct, auth):
     monkey.patch_all()
     clear_stats()
     print_server_info(url, method)
@@ -104,7 +108,8 @@ def load(url, requests, concurrency, duration, method, data, ct):
 
     sys.stdout.write('Starting the load [')
     try:
-        jobs = [gevent.spawn(run, url, requests, duration, method, data, ct)
+        jobs = [gevent.spawn(run, url, requests, duration, method, data, ct,
+                             auth)
                 for i in range(concurrency)]
         gevent.joinall(jobs)
     finally:
@@ -123,11 +128,13 @@ def main():
     parser.add_argument('--content-type', help='Content-Type',
                         type=str, default='text/plain')
 
-
     parser.add_argument('-D', '--data', help='Data', type=str)
 
     parser.add_argument('-c', '--concurrency', help='Concurrency',
                         type=int, default=1)
+
+    parser.add_argument('-a', '--auth',
+                        help='Basic authentication user:password', type=str)
 
     group = parser.add_mutually_exclusive_group()
 
@@ -160,7 +167,7 @@ def main():
     start = time.time()
     try:
         load(args.url, args.requests, args.concurrency, args.duration,
-             args.method, args.data, args.content_type)
+             args.method, args.data, args.content_type, args.auth)
     except KeyboardInterrupt:
         pass
     finally:
