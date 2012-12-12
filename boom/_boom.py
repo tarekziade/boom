@@ -14,7 +14,8 @@ from boom import __version__, _patch     # NOQA
 logger = logging.getLogger('boom')
 
 _stats = defaultdict(list)
-_VERBS = ['GET', 'POST', 'DELETE', 'PUT', 'HEAD', ]
+_VERBS = ['GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS']
+_DATA_VERBS = ['POST', 'PUT', ]
 
 
 def clear_stats():
@@ -63,8 +64,12 @@ def print_server_info(url, method):
     print 'Running %s %s' % (method, url)
 
 
-def onecall(url, method):
+def onecall(url, method, data, ct):
     method = getattr(requests, method.lower())
+    options = {'headers': {'content-type': ct}}
+    if data is not None:
+        options['data'] = data
+
     start = time.time()
     try:
         res = method(url)
@@ -75,19 +80,19 @@ def onecall(url, method):
     sys.stdout.flush()
 
 
-def run(url, num, duration, method):
+def run(url, num, duration, method, data, ct):
     if num is not None:
         for i in range(num):
-            onecall(url, method)
+            onecall(url, method, data, ct)
             gevent.sleep(0)
     else:
         start = time.time()
         while time.time() - start < duration:
-            onecall(url, method)
+            onecall(url, method, data, ct)
             gevent.sleep(0)
 
 
-def load(url, requests, concurrency, duration, method):
+def load(url, requests, concurrency, duration, method, data, ct):
     monkey.patch_all()
     clear_stats()
     print_server_info(url, method)
@@ -99,7 +104,7 @@ def load(url, requests, concurrency, duration, method):
 
     sys.stdout.write('Starting the load [')
     try:
-        jobs = [gevent.spawn(run, url, requests, duration, method)
+        jobs = [gevent.spawn(run, url, requests, duration, method, data, ct)
                 for i in range(concurrency)]
         gevent.joinall(jobs)
     finally:
@@ -114,6 +119,12 @@ def main():
 
     parser.add_argument('-m', '--method', help='Concurrency',
                         type=str, default='GET', choices=_VERBS)
+
+    parser.add_argument('--content-type', help='Content-Type',
+                        type=str, default='text/plain')
+
+
+    parser.add_argument('-D', '--data', help='Data', type=str)
 
     parser.add_argument('-c', '--concurrency', help='Concurrency',
                         type=int, default=1)
@@ -138,13 +149,18 @@ def main():
         parser.print_usage()
         sys.exit(0)
 
+    if args.data is not None and not args.method in _DATA_VERBS:
+        print("You can't provide data with %r" % args.method)
+        parser.print_usage()
+        sys.exit(0)
+
     if args.requests is None and args.duration is None:
         args.requests = 1
 
     start = time.time()
     try:
         load(args.url, args.requests, args.concurrency, args.duration,
-             args.method)
+             args.method, args.data, args.content_type)
     except KeyboardInterrupt:
         pass
     finally:
