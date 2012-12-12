@@ -6,6 +6,10 @@ from collections import defaultdict
 
 from gevent import monkey
 import gevent
+from gevent.pool import Pool
+
+monkey.patch_all()   #thread=False, select=False)
+
 import requests
 
 from boom import __version__, _patch     # NOQA
@@ -27,17 +31,23 @@ def print_stats(total):
     for values in _stats.values():
         all_res += values
 
-    rps = len(all_res) / total
-    avg = sum(all_res) / len(all_res)
-    amp = max(all_res) - min(all_res)
+    if total == 0 or len(all_res) == 0:
+        rps = avg = min_ = max_ = amp = 0
+    else:
+        rps = len(all_res) / total
+        avg = sum(all_res) / len(all_res)
+        max_ = max(all_res)
+        min_ = min(all_res)
+        amp = max(all_res) - min(all_res)
+
     print('')
     print('-------- Results --------')
 
     print('Successful calls\t\t%r' % len(all_res))
     print('Total time       \t\t%.4f s' % total)
     print('Average          \t\t%.4f s' % avg)
-    print('Fastest          \t\t%.4f s' % min(all_res))
-    print('Slowest          \t\t%.4f s' % max(all_res))
+    print('Fastest          \t\t%.4f s' % min_)
+    print('Slowest          \t\t%.4f s' % max_)
     print('Amplitude        \t\t%.4f s' % amp)
     print('RPS              \t\t%d' % rps)
     if rps > 500:
@@ -64,7 +74,16 @@ def print_server_info(url, method):
     print 'Running %s %s' % (method, url)
 
 
-def onecall(url, method, data, ct, auth):
+def onecall(method, url, **options):
+    start = time.time()
+    res = method(url, **options)
+    _stats[res.status_code].append(time.time() - start)
+    sys.stdout.write('=')
+    sys.stdout.flush()
+
+
+def run(url, num, duration, method, data, ct, auth, concurrency):
+
     method = getattr(requests, method.lower())
     options = {'headers': {'content-type': ct}}
 
@@ -74,30 +93,23 @@ def onecall(url, method, data, ct, auth):
     if auth is not None:
         options['auth'] = auth.split(':', 1)
 
-    start = time.time()
-    try:
-        res = method(url)
-    finally:
-        _stats[res.status_code].append(time.time() - start)
+    pool = Pool(concurrency)
 
-    sys.stdout.write('=')
-    sys.stdout.flush()
-
-
-def run(url, num, duration, method, data, ct, auth):
     if num is not None:
+
         for i in range(num):
-            onecall(url, method, data, ct, auth)
-            gevent.sleep(0)
+            pool.spawn(onecall, method, url, **options)
+
+        pool.join()
     else:
-        start = time.time()
-        while time.time() - start < duration:
-            onecall(url, method, data, ct, auth)
-            gevent.sleep(0)
+        with gevent.Timeout(duration, False):
+            while True:
+                pool.spawn(onecall, method, url, **options)
+
+            pool.join()
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth):
-    monkey.patch_all()
     clear_stats()
     print_server_info(url, method)
     if requests is not None:
@@ -108,10 +120,8 @@ def load(url, requests, concurrency, duration, method, data, ct, auth):
 
     sys.stdout.write('Starting the load [')
     try:
-        jobs = [gevent.spawn(run, url, requests, duration, method, data, ct,
-                             auth)
-                for i in range(concurrency)]
-        gevent.joinall(jobs)
+        run(url, requests, duration, method, data, ct,
+            auth, concurrency)
     finally:
         print('] Done')
 
