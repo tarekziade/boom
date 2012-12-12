@@ -35,8 +35,9 @@ More options::
 
 
     $ boom --help
-    usage: boom [-h] [--version] [-c CONCURRENCY] [-n REQUESTS | -d DURATION]
-            [url]
+    usage: boom [-h] [--version] [-m {GET,POST,DELETE,PUT,HEAD}] [-c CONCURRENCY]
+                [-n REQUESTS | -d DURATION]
+                [url]
 
     AB For Humans.
 
@@ -46,12 +47,15 @@ More options::
     optional arguments:
     -h, --help            show this help message and exit
     --version             Displays version and exits.
+    -m {GET,POST,DELETE,PUT,HEAD}, --method {GET,POST,DELETE,PUT,HEAD}
+                            Concurrency
     -c CONCURRENCY, --concurrency CONCURRENCY
-                        Concurrency
+                            Concurrency
     -n REQUESTS, --requests REQUESTS
-                        Number of requests
+                            Number of requests
     -d DURATION, --duration DURATION
-                        Duration in seconds
+                            Duration in seconds
+
 
 
 Design

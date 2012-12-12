@@ -14,6 +14,7 @@ from boom import __version__, _patch     # NOQA
 logger = logging.getLogger('boom')
 
 _stats = defaultdict(list)
+_VERBS = ['GET', 'POST', 'DELETE', 'PUT', 'HEAD', ]
 
 
 def clear_stats():
@@ -56,15 +57,17 @@ def print_stats(total):
     print('BSI: Boom Speed Index')
 
 
-def print_server_info(url):
+def print_server_info(url, method):
     res = requests.head(url)
     print 'Server Software: ' + res.headers['server']
+    print 'Running %s %s' % (method, url)
 
 
-def onecall(url):
+def onecall(url, method):
+    method = getattr(requests, method.lower())
     start = time.time()
     try:
-        res = requests.get(url)
+        res = method(url)
     finally:
         _stats[res.status_code].append(time.time() - start)
 
@@ -72,22 +75,22 @@ def onecall(url):
     sys.stdout.flush()
 
 
-def run(url, num, duration, method='GET'):
+def run(url, num, duration, method):
     if num is not None:
         for i in range(num):
-            onecall(url)
+            onecall(url, method)
             gevent.sleep(0)
     else:
         start = time.time()
         while time.time() - start < duration:
-            onecall(url)
+            onecall(url, method)
             gevent.sleep(0)
 
 
-def load(url, requests, concurrency, duration):
+def load(url, requests, concurrency, duration, method):
     monkey.patch_all()
     clear_stats()
-    print_server_info(url)
+    print_server_info(url, method)
     if requests is not None:
         print('Running %d times per %d workers.' % (requests, concurrency))
     else:
@@ -96,7 +99,7 @@ def load(url, requests, concurrency, duration):
 
     sys.stdout.write('Starting the load [')
     try:
-        jobs = [gevent.spawn(run, url, requests, duration)
+        jobs = [gevent.spawn(run, url, requests, duration, method)
                 for i in range(concurrency)]
         gevent.joinall(jobs)
     finally:
@@ -110,7 +113,7 @@ def main():
                         help='Displays version and exits.')
 
     parser.add_argument('-m', '--method', help='Concurrency',
-                        type=str, default='GET')
+                        type=str, default='GET', choices=_VERBS)
 
     parser.add_argument('-c', '--concurrency', help='Concurrency',
                         type=int, default=1)
@@ -140,7 +143,8 @@ def main():
 
     start = time.time()
     try:
-        load(args.url, args.requests, args.concurrency, args.duration)
+        load(args.url, args.requests, args.concurrency, args.duration,
+             args.method)
     except KeyboardInterrupt:
         pass
     finally:
