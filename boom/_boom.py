@@ -3,10 +3,13 @@ import argparse
 import sys
 import time
 from collections import defaultdict
+import urlparse
+
 
 from gevent import monkey
 import gevent
 from gevent.pool import Pool
+from gevent.socket import gethostbyname
 
 monkey.patch_all()   #thread=False, select=False)
 
@@ -109,6 +112,16 @@ def run(url, num, duration, method, data, ct, auth, concurrency):
             pool.join()
 
 
+def resolve(url):
+    parts = urlparse.urlparse(url)
+    netloc = parts.netloc.rsplit(':')
+    if len(netloc) == 1:
+        netloc.append('80')
+    netloc = ':'.join([gethostbyname(netloc[0]), netloc[1]])
+    parts = (parts.scheme, netloc) + parts[2:]
+    return urlparse.urlunparse(parts)
+
+
 def load(url, requests, concurrency, duration, method, data, ct, auth):
     clear_stats()
     print_server_info(url, method)
@@ -157,6 +170,8 @@ def main():
     parser.add_argument('url', help='URL to hit', nargs='?')
     args = parser.parse_args()
 
+    url = resolve(args.url)
+
     if args.version:
         print(__version__)
         sys.exit(0)
@@ -176,7 +191,7 @@ def main():
 
     start = time.time()
     try:
-        load(args.url, args.requests, args.concurrency, args.duration,
+        load(url, args.requests, args.concurrency, args.duration,
              args.method, args.data, args.content_type, args.auth)
     except KeyboardInterrupt:
         pass
