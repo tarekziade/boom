@@ -2,6 +2,7 @@ import logging
 import argparse
 import sys
 import time
+from collections import defaultdict
 
 from gevent import monkey
 import gevent
@@ -12,26 +13,29 @@ from boom import __version__, _patch     # NOQA
 
 logger = logging.getLogger('boom')
 
-_stats = []
+_stats = defaultdict(list)
 
 
 def clear_stats():
-    _stats[:] = []
+    _stats.clear()
 
 
 def print_stats(total):
-    rps = len(_stats) / total
-    avg = sum(_stats) / len(_stats)
-    amp = max(_stats) - min(_stats)
+    all_res = []
+    for values in _stats.values():
+        all_res += values
 
+    rps = len(all_res) / total
+    avg = sum(all_res) / len(all_res)
+    amp = max(all_res) - min(all_res)
     print('')
     print('-------- Results --------')
 
-    print('Successful calls\t\t%r' % len(_stats))
+    print('Successful calls\t\t%r' % len(all_res))
     print('Total time       \t\t%.4f s' % total)
     print('Average          \t\t%.4f s' % avg)
-    print('Fastest          \t\t%.4f s' % min(_stats))
-    print('Slowest          \t\t%.4f s' % max(_stats))
+    print('Fastest          \t\t%.4f s' % min(all_res))
+    print('Slowest          \t\t%.4f s' % max(all_res))
     print('Amplitude        \t\t%.4f s' % amp)
     print('RPS              \t\t%d' % rps)
     if rps > 500:
@@ -42,7 +46,10 @@ def print_stats(total):
         print('BSI              \t\tMeh')
     else:
         print('BSI              \t\tHahahaha')
-
+    print('')
+    print('-------- Status codes --------')
+    for code, items in _stats.items():
+        print('Code %d          \t\t%d times.' % (code, len(items)))
     print('')
     print('-------- Legend --------')
     print('RPS: Request Per Second')
@@ -57,9 +64,9 @@ def print_server_info(url):
 def onecall(url):
     start = time.time()
     try:
-        requests.get(url)
+        res = requests.get(url)
     finally:
-        _stats.append(time.time() - start)
+        _stats[res.status_code].append(time.time() - start)
 
     sys.stdout.write('=')
     sys.stdout.flush()
@@ -101,6 +108,9 @@ def main():
 
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
+
+    parser.add_argument('-m', '--method', help='Concurrency',
+                        type=str, default='GET')
 
     parser.add_argument('-c', '--concurrency', help='Concurrency',
                         type=int, default=1)
