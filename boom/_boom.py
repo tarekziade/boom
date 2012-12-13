@@ -5,13 +5,12 @@ import time
 from collections import defaultdict
 import urlparse
 
-
 from gevent import monkey
 import gevent
 from gevent.pool import Pool
 from gevent.socket import gethostbyname
 
-monkey.patch_all()   #thread=False, select=False)
+monkey.patch_all()
 
 import requests
 
@@ -140,7 +139,7 @@ def load(url, requests, concurrency, duration, method, data, ct, auth):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='AB For Humans.')
+    parser = argparse.ArgumentParser(description='Simple HTTP Load runner.')
 
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
