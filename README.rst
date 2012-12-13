@@ -1,21 +1,22 @@
-Boom! - Simple HTTP Load tester
-===============================
-
 **Boom!** is a simple command line send some load to a web app.
 
-Boom! is just a tool you can do to quickly smoke-test your
+Boom! is a script you can use to quickly smoke-test your
 web app deployement. If you need a more complex tool,
 I'd suggest looking at `Funkload <http://funkload.nuxeo.org/>`_.
 
 Boom! was specifically written to replace my Apache Bench usage,
-because I was annoyed by some bugs and stupid behaviors.
+because I was annoyed by some bugs and some stupid behaviors.
+
+And it was **so simple** to write it, thanks to Gevent.
+
+I have no special ambitions for this tool, and since I have not
+found any tool like this in the Python-land, I wrote this one.
 
 There are a lot of other tools out there, like Siege which
 seems very popular.
 
 However, Boom! is a good choice because it works on any platform
 and is able to simulate thousands of users by using greenlets.
-
 
 Installation::
 
@@ -89,6 +90,3 @@ I plan to add more things like allow people to provide a callable for the -D opt
 
 If you are interested in this project, you are welcome to join the fun at
 https://github.com/tarekziade/boom
-
-I have no special ambitions for this tool - I just found it **so simple** to write thanks to Gevent
-and I have not seen such a tool in the Python-land as far as I have looked.
