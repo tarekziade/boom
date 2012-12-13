@@ -2,10 +2,10 @@
 .. image:: http://blog.ziade.org/boom.png
 
 
-**Boom!** is a simple command line send some load to a web app.
+**Boom!** is a simple command line tool to send some load to a web app.
 
 Boom! is a script you can use to quickly smoke-test your
-web app deployement. If you need a more complex tool,
+web app deployment. If you need a more complex tool,
 I'd suggest looking at `Funkload <http://funkload.nuxeo.org/>`_.
 
 Boom! was specifically written to replace my Apache Bench usage,
@@ -90,7 +90,7 @@ queries.
 Using greenlets allows Boom to spawn large amounts of virtual users with very little
 resources. It's not a problem to spawn 1000 users and hammer a web application with them.
 
-I plan to add more things like allow people to provide a callable for the -D option.
+I plan to add more things like allowing people to provide a callable for the -D option.
 
 If you are interested in this project, you are welcome to join the fun at
 https://github.com/tarekziade/boom
