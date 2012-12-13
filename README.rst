@@ -1,5 +1,5 @@
 
-.. img:: http://blog.ziade.org/boom.png
+.. image:: http://blog.ziade.org/boom.png
 
 
 **Boom!** is a simple command line send some load to a web app.
