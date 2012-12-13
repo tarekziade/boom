@@ -1,3 +1,7 @@
+
+.. img:: http://blog.ziade.org/boom.png
+
+
 **Boom!** is a simple command line send some load to a web app.
 
 Boom! is a script you can use to quickly smoke-test your
