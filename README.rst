@@ -22,10 +22,29 @@ seems very popular.
 However, Boom! is a good choice because it works on any platform
 and is able to simulate thousands of users by using greenlets.
 
-Installation::
+Installation
+============
+
+Boom! requires **Gevent** and **Requests**. If you are under Windows
+I strongly recommend installing Gevent with the *xxx-win32-py2.7.exe*
+installer you will find  at: https://github.com/SiteSupport/gevent/downloads
+
+Vaurien should work with the latest 1.x version or the latest 0.x version.
+
+If you are under Linux, installing the source version is usually a better
+idea. You will need libevent for Gevent 0.x and libev for Gevent 1.x.
+
+Example under Ubuntu::
+
+    $ sudo apt-get install libevent python-dev
+
+Then::
 
     $ pip install boom
 
+
+Basic usage
+===========
 
 Basic usage example: 10 queries with a maximum concurrency of
 10 users::
