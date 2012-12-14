@@ -4,6 +4,7 @@ import sys
 import time
 from collections import defaultdict
 import urlparse
+from copy import copy
 
 from gevent import monkey
 import gevent
@@ -15,6 +16,7 @@ monkey.patch_all()
 import requests
 
 from boom import __version__, _patch     # NOQA
+from boom.util import resolve_name
 
 
 logger = logging.getLogger('boom')
@@ -78,6 +80,11 @@ def print_server_info(url, method):
 
 def onecall(method, url, **options):
     start = time.time()
+
+    if 'data' in options and callable(options['data']):
+        options = copy(options)
+        options['data'] = options['data'](method, url, options)
+
     res = method(url, **options)
     _stats[res.status_code].append(time.time() - start)
     sys.stdout.write('=')
@@ -85,6 +92,9 @@ def onecall(method, url, **options):
 
 
 def run(url, num, duration, method, data, ct, auth, concurrency):
+    if data is not None and data.startswith('py:'):
+        callable = data[len('py:'):]
+        data = resolve_name(callable)
 
     method = getattr(requests, method.lower())
     options = {'headers': {'content-type': ct}}
@@ -144,13 +154,16 @@ def main():
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
 
-    parser.add_argument('-m', '--method', help='Concurrency',
+    parser.add_argument('-m', '--method', help='HTTP Method',
                         type=str, default='GET', choices=_VERBS)
 
     parser.add_argument('--content-type', help='Content-Type',
                         type=str, default='text/plain')
 
-    parser.add_argument('-D', '--data', help='Data', type=str)
+    parser.add_argument('-D', '--data',
+                        help=('Data. Prefixed by "py:" to point '
+                              'a python callable.'),
+                        type=str)
 
     parser.add_argument('-c', '--concurrency', help='Concurrency',
                         type=int, default=1)
@@ -169,8 +182,6 @@ def main():
     parser.add_argument('url', help='URL to hit', nargs='?')
     args = parser.parse_args()
 
-    url = resolve(args.url)
-
     if args.version:
         print(__version__)
         sys.exit(0)
@@ -187,6 +198,8 @@ def main():
 
     if args.requests is None and args.duration is None:
         args.requests = 1
+
+    url = resolve(args.url)
 
     start = time.time()
     try:
