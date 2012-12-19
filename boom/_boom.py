@@ -74,7 +74,7 @@ def print_stats(total):
 
 def print_server_info(url, method):
     res = requests.head(url)
-    print 'Server Software: ' + res.headers['server']
+    print 'Server Software: %(server)s' % res.headers
     print 'Running %s %s' % (method, url)
 
 
