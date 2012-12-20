@@ -103,7 +103,7 @@ def run(url, num, duration, method, data, ct, auth, concurrency):
         options['data'] = data
 
     if auth is not None:
-        options['auth'] = auth.split(':', 1)
+        options['auth'] = tuple(auth.split(':', 1))
 
     pool = Pool(concurrency)
 
