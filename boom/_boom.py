@@ -74,7 +74,7 @@ def print_stats(total):
 
 def print_server_info(url, method):
     res = requests.head(url)
-    print 'Server Software: ' + res.headers['server']
+    print 'Server Software: %(server)s' % res.headers
     print 'Running %s %s' % (method, url)
 
 
@@ -103,7 +103,7 @@ def run(url, num, duration, method, data, ct, auth, concurrency):
         options['data'] = data
 
     if auth is not None:
-        options['auth'] = auth.split(':', 1)
+        options['auth'] = tuple(auth.split(':', 1))
 
     pool = Pool(concurrency)
 
