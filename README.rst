@@ -29,7 +29,7 @@ Boom! requires **Gevent** and **Requests**. If you are under Windows
 I strongly recommend installing Gevent with the *xxx-win32-py2.7.exe*
 installer you will find  at: https://github.com/SiteSupport/gevent/downloads
 
-Vaurien should work with the latest 1.x version or the latest 0.x version.
+Boom! should work with the latest 1.x version or the latest 0.x version.
 
 If you are under Linux, installing the source version is usually a better
 idea. You will need libevent for Gevent 0.x and libev for Gevent 1.x.
