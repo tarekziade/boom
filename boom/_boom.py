@@ -91,7 +91,8 @@ def onecall(method, url, **options):
     sys.stdout.flush()
 
 
-def run(url, num, duration, method, data, ct, auth, concurrency):
+def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
+        auth=None, concurrency=1):
     if data is not None and data.startswith('py:'):
         callable = data[len('py:'):]
         data = resolve_name(callable)
@@ -108,7 +109,6 @@ def run(url, num, duration, method, data, ct, auth, concurrency):
     pool = Pool(concurrency)
 
     if num is not None:
-
         for i in range(num):
             pool.spawn(onecall, method, url, **options)
 
