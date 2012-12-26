@@ -98,6 +98,8 @@ Boom! has more options::
                             Number of requests
     -d DURATION, --duration DURATION
                             Duration in seconds
+    -H HEADER, --header HEADER
+                            Custom header. name:value
 
 
 Design
