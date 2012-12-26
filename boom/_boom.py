@@ -30,10 +30,12 @@ def clear_stats():
     _stats.clear()
 
 
-def print_stats(total):
+def print_stats():
     all_res = []
     for values in _stats.values():
         all_res += values
+
+    total = sum(all_res)
 
     if total == 0 or len(all_res) == 0:
         rps = avg = min_ = max_ = amp = 0
@@ -92,13 +94,20 @@ def onecall(method, url, **options):
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
-        auth=None, concurrency=1):
+        auth=None, concurrency=1, headers=None):
+
+    if headers is None:
+        headers = {}
+
+    if 'content-type' not in headers:
+        headers['Content-Type'] = ct
+
     if data is not None and data.startswith('py:'):
         callable = data[len('py:'):]
         data = resolve_name(callable)
 
     method = getattr(requests, method.lower())
-    options = {'headers': {'content-type': ct}}
+    options = {'headers': headers}
 
     if data is not None:
         options['data'] = data
@@ -126,12 +135,15 @@ def resolve(url):
     netloc = parts.netloc.rsplit(':')
     if len(netloc) == 1:
         netloc.append('80')
-    netloc = ':'.join([gethostbyname(netloc[0]), netloc[1]])
+    original = netloc[0]
+    resolved = gethostbyname(original)
+    netloc = resolved + ':' + netloc[1]
     parts = (parts.scheme, netloc) + parts[2:]
-    return urlparse.urlunparse(parts)
+    return urlparse.urlunparse(parts), original, resolved
 
 
-def load(url, requests, concurrency, duration, method, data, ct, auth):
+def load(url, requests, concurrency, duration, method, data, ct, auth,
+         headers=None):
     clear_stats()
     print_server_info(url, method)
     if requests is not None:
@@ -143,7 +155,7 @@ def load(url, requests, concurrency, duration, method, data, ct, auth):
     sys.stdout.write('Starting the load [')
     try:
         run(url, requests, duration, method, data, ct,
-            auth, concurrency)
+            auth, concurrency, headers)
     finally:
         print('] Done')
 
@@ -179,6 +191,9 @@ def main():
     group.add_argument('-d', '--duration', help='Duration in seconds',
                        type=int)
 
+    group.add_argument('-H', '--header', help='Custom header',
+                       type=str, action='append')
+
     parser.add_argument('url', help='URL to hit', nargs='?')
     args = parser.parse_args()
 
@@ -199,17 +214,34 @@ def main():
     if args.requests is None and args.duration is None:
         args.requests = 1
 
-    url = resolve(args.url)
+    url, original, resolved = resolve(args.url)
 
-    start = time.time()
+    def _split(header):
+        header = header.split(':')
+
+        if len(header) != 2:
+            print("A header must be of the form name:value")
+            parser.print_usage()
+            sys.exit(0)
+
+        return header
+
+    if args.header is None:
+        headers = {}
+    else:
+        headers = dict([_split(header) for header in args.header])
+
+    if original != resolved and 'Home' not in headers:
+        headers['Home'] = original
+
     try:
         load(url, args.requests, args.concurrency, args.duration,
-             args.method, args.data, args.content_type, args.auth)
+             args.method, args.data, args.content_type, args.auth,
+             headers=headers)
     except KeyboardInterrupt:
         pass
     finally:
-        total = time.time() - start
-        print_stats(total)
+        print_stats()
         logger.info('Bye!')
 
 
