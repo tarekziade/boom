@@ -191,7 +191,7 @@ def main():
     group.add_argument('-d', '--duration', help='Duration in seconds',
                        type=int)
 
-    group.add_argument('-H', '--header', help='Custom header',
+    group.add_argument('-H', '--header', help='Custom header. name:value',
                        type=str, action='append')
 
     parser.add_argument('url', help='URL to hit', nargs='?')
