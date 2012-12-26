@@ -74,10 +74,14 @@ def print_stats():
     print('BSI: Boom Speed Index')
 
 
-def print_server_info(url, method):
+def print_server_info(url, method, headers=None):
     res = requests.head(url)
     print 'Server Software: %(server)s' % res.headers
     print 'Running %s %s' % (method, url)
+
+    if headers:
+        for k, v in headers.items():
+            print '\t%s: %s' % (k, v)
 
 
 def onecall(method, url, **options):
@@ -145,7 +149,7 @@ def resolve(url):
 def load(url, requests, concurrency, duration, method, data, ct, auth,
          headers=None):
     clear_stats()
-    print_server_info(url, method)
+    print_server_info(url, method, headers=headers)
     if requests is not None:
         print('Running %d times per %d workers.' % (requests, concurrency))
     else:
