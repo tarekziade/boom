@@ -231,8 +231,8 @@ def main():
     else:
         headers = dict([_split(header) for header in args.header])
 
-    if original != resolved and 'Home' not in headers:
-        headers['Home'] = original
+    if original != resolved and 'Host' not in headers:
+        headers['Host'] = original
 
     try:
         load(url, args.requests, args.concurrency, args.duration,
