@@ -183,6 +183,9 @@ def main():
     parser.add_argument('-a', '--auth',
                         help='Basic authentication user:password', type=str)
 
+    parser.add_argument('-H', '--header', help='Custom header',
+                        type=str, action='append')
+
     group = parser.add_mutually_exclusive_group()
 
     group.add_argument('-n', '--requests', help='Number of requests',
@@ -190,9 +193,6 @@ def main():
 
     group.add_argument('-d', '--duration', help='Duration in seconds',
                        type=int)
-
-    group.add_argument('-H', '--header', help='Custom header',
-                       type=str, action='append')
 
     parser.add_argument('url', help='URL to hit', nargs='?')
     args = parser.parse_args()
