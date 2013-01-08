@@ -22,11 +22,14 @@ from boom.util import resolve_name
 logger = logging.getLogger('boom')
 
 _stats = defaultdict(list)
+_total = None
 _VERBS = ['GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS']
 _DATA_VERBS = ['POST', 'PUT', ]
 
 
 def clear_stats():
+    global _total
+    _total = None
     _stats.clear()
 
 
@@ -35,12 +38,12 @@ def print_stats():
     for values in _stats.values():
         all_res += values
 
-    total = sum(all_res)
+    count = sum(all_res)
 
-    if total == 0 or len(all_res) == 0:
+    if count == 0 or len(all_res) == 0:
         rps = avg = min_ = max_ = amp = 0
     else:
-        rps = len(all_res) / total
+        rps = len(all_res) / _total
         avg = sum(all_res) / len(all_res)
         max_ = max(all_res)
         min_ = min(all_res)
@@ -50,7 +53,7 @@ def print_stats():
     print('-------- Results --------')
 
     print('Successful calls\t\t%r' % len(all_res))
-    print('Total time       \t\t%.4f s' % total)
+    print('Total time       \t\t%.4f s' % _total)
     print('Average          \t\t%.4f s' % avg)
     print('Fastest          \t\t%.4f s' % min_)
     print('Slowest          \t\t%.4f s' % max_)
@@ -121,17 +124,22 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
 
     pool = Pool(concurrency)
 
-    if num is not None:
-        for i in range(num):
-            pool.spawn(onecall, method, url, **options)
-
-        pool.join()
-    else:
-        with gevent.Timeout(duration, False):
-            while True:
+    start = time.time()
+    try:
+        if num is not None:
+            for i in range(num):
                 pool.spawn(onecall, method, url, **options)
 
             pool.join()
+        else:
+            with gevent.Timeout(duration, False):
+                while True:
+                    pool.spawn(onecall, method, url, **options)
+
+                pool.join()
+    finally:
+        global _total
+        _total = time.time() - start
 
 
 def resolve(url):
