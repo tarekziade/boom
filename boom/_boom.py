@@ -74,10 +74,14 @@ def print_stats():
     print('BSI: Boom Speed Index')
 
 
-def print_server_info(url, method):
+def print_server_info(url, method, headers=None):
     res = requests.head(url)
     print 'Server Software: %(server)s' % res.headers
     print 'Running %s %s' % (method, url)
+
+    if headers:
+        for k, v in headers.items():
+            print '\t%s: %s' % (k, v)
 
 
 def onecall(method, url, **options):
@@ -145,7 +149,7 @@ def resolve(url):
 def load(url, requests, concurrency, duration, method, data, ct, auth,
          headers=None):
     clear_stats()
-    print_server_info(url, method)
+    print_server_info(url, method, headers=headers)
     if requests is not None:
         print('Running %d times per %d workers.' % (requests, concurrency))
     else:
@@ -183,6 +187,9 @@ def main():
     parser.add_argument('-a', '--auth',
                         help='Basic authentication user:password', type=str)
 
+    parser.add_argument('-H', '--header', help='Custom header. name:value',
+                        type=str, action='append')
+
     group = parser.add_mutually_exclusive_group()
 
     group.add_argument('-n', '--requests', help='Number of requests',
@@ -190,9 +197,6 @@ def main():
 
     group.add_argument('-d', '--duration', help='Duration in seconds',
                        type=int)
-
-    group.add_argument('-H', '--header', help='Custom header. name:value',
-                       type=str, action='append')
 
     parser.add_argument('url', help='URL to hit', nargs='?')
     args = parser.parse_args()
@@ -231,8 +235,8 @@ def main():
     else:
         headers = dict([_split(header) for header in args.header])
 
-    if original != resolved and 'Home' not in headers:
-        headers['Home'] = original
+    if original != resolved and 'Host' not in headers:
+        headers['Host'] = original
 
     try:
         load(url, args.requests, args.concurrency, args.duration,
