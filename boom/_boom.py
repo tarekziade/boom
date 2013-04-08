@@ -94,6 +94,10 @@ def onecall(method, url, **options):
         options = copy(options)
         options['data'] = options['data'](method, url, options)
 
+    if 'hook' in options:
+        method, url, options = options['hook'](method, url, options)
+        del options['hook']
+
     res = method(url, **options)
     _stats[res.status_code].append(time.time() - start)
     sys.stdout.write('=')
@@ -101,7 +105,7 @@ def onecall(method, url, **options):
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
-        auth=None, concurrency=1, headers=None):
+        auth=None, concurrency=1, headers=None, hook=None):
 
     if headers is None:
         headers = {}
@@ -115,6 +119,9 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
 
     method = getattr(requests, method.lower())
     options = {'headers': headers}
+
+    if hook is not None:
+        options['hook'] = resolve_name(hook)
 
     if data is not None:
         options['data'] = data
@@ -155,7 +162,7 @@ def resolve(url):
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
-         headers=None):
+         headers=None, hook=None):
     clear_stats()
     print_server_info(url, method, headers=headers)
     if requests is not None:
@@ -167,7 +174,7 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
     sys.stdout.write('Starting the load [')
     try:
         run(url, requests, duration, method, data, ct,
-            auth, concurrency, headers)
+            auth, concurrency, headers, hook)
     finally:
         print('] Done')
 
@@ -197,6 +204,11 @@ def main():
 
     parser.add_argument('-H', '--header', help='Custom header. name:value',
                         type=str, action='append')
+
+    parser.add_argument('-H', '--hook',
+                        help=("Python callable that'll be used "
+                              "on every requests call"),
+                        type=str)
 
     group = parser.add_mutually_exclusive_group()
 
@@ -249,7 +261,7 @@ def main():
     try:
         load(url, args.requests, args.concurrency, args.duration,
              args.method, args.data, args.content_type, args.auth,
-             headers=headers)
+             headers=headers, hook=args.hook)
     except KeyboardInterrupt:
         pass
     finally:

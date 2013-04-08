@@ -2,7 +2,6 @@ import unittest
 import subprocess
 import sys
 import shlex
-import time
 
 from gevent.pywsgi import WSGIServer
 from boom._boom import run as runboom
@@ -16,7 +15,7 @@ class App(object):
 
     def handle(self, env, start_response):
         if env['PATH_INFO'] == '/':
-            self.numcalls +=1
+            self.numcalls += 1
             start_response('200 OK', [('Content-Type', 'text/html')])
             return ["<b>hello world</b>"]
         elif env['PATH_INFO'] == '/calls':
@@ -48,6 +47,11 @@ def _stop():
     _SERVER = None
 
 
+def hook(method, url, options):
+    options['files'] = {'file': open(__file__, 'rb')}
+    return method, url, options
+
+
 class TestBoom(unittest.TestCase):
 
     def setUp(self):
@@ -65,9 +69,15 @@ class TestBoom(unittest.TestCase):
 
     def test_basic_run(self):
         runboom(self.server, num=10, concurrency=1)
-        res = requests.get(self.server +'calls').content
+        res = requests.get(self.server + 'calls').content
+        self.assertEqual(int(res), 10 + 1)
+
+    def test_hook(self):
+        runboom(self.server, method='POST', num=10, concurrency=1,
+                hook='boom.tests.hook')
+        res = requests.get(self.server + 'calls').content
         self.assertEqual(int(res), 10 + 1)
 
 
-if __name__  == '__main__':
+if __name__ == '__main__':
     run()
