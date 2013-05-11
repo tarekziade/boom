@@ -71,11 +71,10 @@ Basic usage example: 10 queries with a maximum concurrency of
 
 Boom! has more options::
 
-
     $ boom --help
     usage: boom [-h] [--version] [-m {GET,POST,DELETE,PUT,HEAD,OPTIONS}]
                 [--content-type CONTENT_TYPE] [-D DATA] [-c CONCURRENCY] [-a AUTH]
-                [-n REQUESTS | -d DURATION]
+                [--header HEADER] [--hook HOOK] [-n REQUESTS | -d DURATION]
                 [url]
 
     Simple HTTP Load runner.
@@ -87,19 +86,20 @@ Boom! has more options::
     -h, --help            show this help message and exit
     --version             Displays version and exits.
     -m {GET,POST,DELETE,PUT,HEAD,OPTIONS}, --method {GET,POST,DELETE,PUT,HEAD,OPTIONS}
-                            Concurrency
+                            HTTP Method
     --content-type CONTENT_TYPE
                             Content-Type
-    -D DATA, --data DATA  Data
+    -D DATA, --data DATA  Data. Prefixed by "py:" to point a python callable.
     -c CONCURRENCY, --concurrency CONCURRENCY
                             Concurrency
     -a AUTH, --auth AUTH  Basic authentication user:password
+    --header HEADER       Custom header. name:value
+    --hook HOOK           Python callable that'll be used on every requests call
     -n REQUESTS, --requests REQUESTS
                             Number of requests
     -d DURATION, --duration DURATION
                             Duration in seconds
-    -H HEADER, --header HEADER
-                            Custom header. name:value
+
 
 
 Design
@@ -110,8 +110,6 @@ queries.
 
 Using greenlets allows Boom to spawn large amounts of virtual users with very little
 resources. It's not a problem to spawn 1000 users and hammer a web application with them.
-
-I plan to add more things like allowing people to provide a callable for the -D option.
 
 If you are interested in this project, you are welcome to join the fun at
 https://github.com/tarekziade/boom
