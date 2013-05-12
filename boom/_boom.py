@@ -10,10 +10,12 @@ from gevent import monkey
 import gevent
 from gevent.pool import Pool
 from gevent.socket import gethostbyname
+from gevent.util import wrap_errors
 
 monkey.patch_all()
 
 import requests
+from requests import RequestException
 
 from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
@@ -87,7 +89,14 @@ def print_server_info(url, method, headers=None):
             print '\t%s: %s' % (k, v)
 
 
-def onecall(method, url, **options):
+def print_errors(errors):
+    print('')
+    print('-------- Errors --------')
+    for error in errors:
+        print(error)
+
+
+def _onecall(method, url, **options):
     start = time.time()
 
     if 'data' in options and callable(options['data']):
@@ -102,6 +111,8 @@ def onecall(method, url, **options):
     _stats[res.status_code].append(time.time() - start)
     sys.stdout.write('=')
     sys.stdout.flush()
+
+onecall = wrap_errors((RequestException, ), _onecall)
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
@@ -132,21 +143,25 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
     pool = Pool(concurrency)
 
     start = time.time()
+    jobs = None
+
     try:
         if num is not None:
-            for i in range(num):
-                pool.spawn(onecall, method, url, **options)
-
+            jobs = [pool.spawn(onecall, method, url, **options)
+                    for i in range(num)]
             pool.join()
         else:
             with gevent.Timeout(duration, False):
+                jobs = []
                 while True:
-                    pool.spawn(onecall, method, url, **options)
+                    jobs.append(pool.spawn(onecall, method, url, **options))
 
                 pool.join()
     finally:
         global _total
         _total = time.time() - start
+
+    return [job.value for job in jobs if job.value]
 
 
 def resolve(url):
@@ -173,8 +188,8 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
 
     sys.stdout.write('Starting the load [')
     try:
-        run(url, requests, duration, method, data, ct,
-            auth, concurrency, headers, hook)
+        return run(url, requests, duration, method, data, ct,
+                   auth, concurrency, headers, hook)
     finally:
         print('] Done')
 
@@ -259,14 +274,18 @@ def main():
         headers['Host'] = original
 
     try:
-        load(url, args.requests, args.concurrency, args.duration,
-             args.method, args.data, args.content_type, args.auth,
-             headers=headers, hook=args.hook)
+        errors = load(url, args.requests, args.concurrency, args.duration,
+                      args.method, args.data, args.content_type, args.auth,
+                      headers=headers, hook=args.hook)
+        print_errors(errors)
     except KeyboardInterrupt:
         pass
-    finally:
-        print_stats()
-        logger.info('Bye!')
+    except RequestException as e:
+        print_errors((e, ))
+        sys.exit(1)
+
+    print_stats()
+    logger.info('Bye!')
 
 
 if __name__ == '__main__':
