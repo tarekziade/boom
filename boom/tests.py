@@ -21,6 +21,10 @@ class App(object):
         elif env['PATH_INFO'] == '/calls':
             start_response('200 OK', [('Content-Type', 'text/plain')])
             return [str(self.numcalls)]
+        elif env['PATH_INFO'] == '/redir':
+            self.numcalls += 1
+            start_response('302 Found', [('Location', '/redir')])
+            return []
         else:
             start_response('404 Not Found', [('Content-Type', 'text/plain')])
             return ['%s' % env['PATH_INFO']]
@@ -77,6 +81,20 @@ class TestBoom(unittest.TestCase):
                 hook='boom.tests.hook')
         res = requests.get(self.server + 'calls').content
         self.assertEqual(int(res), 10 + 1)
+
+    def test_connection_error(self):
+        errors = runboom('http://localhost:9999', num=10, concurrency=1)
+        self.assertEqual(len(errors), 10)
+        for error in errors:
+            self.assertIsInstance(error, requests.ConnectionError)
+
+    def test_too_many_redirects(self):
+        errors = runboom(self.server + 'redir', num=2, concurrency=1)
+        res = requests.get(self.server + 'calls').content
+        self.assertEqual(int(res), 62 + 1)
+        for error in errors:
+            print error
+            self.assertIsInstance(error, requests.TooManyRedirects)
 
 
 if __name__ == '__main__':
