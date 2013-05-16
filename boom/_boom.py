@@ -167,8 +167,13 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
 def resolve(url):
     parts = urlparse.urlparse(url)
     netloc = parts.netloc.rsplit(':')
+
     if len(netloc) == 1:
-        netloc.append('80')
+        if parts.scheme == 'https':
+            netloc.append('443')
+        else:
+            netloc.append('80')
+
     original = netloc[0]
     resolved = gethostbyname(original)
 

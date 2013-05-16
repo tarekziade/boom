@@ -111,5 +111,19 @@ class TestBoom(unittest.TestCase):
         self.assertEqual(original, 'localhost')
         self.assertEqual(resolved, 'localhost')
 
+    def test_resolve_no_scheme(self):
+        test_url = 'http://localhost'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'http://127.0.0.1:80')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, '127.0.0.1')
+
+    def test_resolve_no_scheme_ssl(self):
+        test_url = 'https://localhost'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'https://localhost:443')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, 'localhost')
+
 if __name__ == '__main__':
     run()
