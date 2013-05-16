@@ -5,6 +5,7 @@ import shlex
 
 from gevent.pywsgi import WSGIServer
 from boom._boom import run as runboom
+from boom._boom import resolve
 import requests
 import gevent
 
@@ -96,6 +97,19 @@ class TestBoom(unittest.TestCase):
             print error
             self.assertIsInstance(error, requests.TooManyRedirects)
 
+    def test_resolve(self):
+        test_url = 'http://localhost:9999'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'http://127.0.0.1:9999')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, '127.0.0.1')
+
+    def test_ssl_resolve(self):
+        test_url = 'https://localhost:9999'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'https://localhost:9999')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, 'localhost')
 
 if __name__ == '__main__':
     run()

@@ -171,6 +171,12 @@ def resolve(url):
         netloc.append('80')
     original = netloc[0]
     resolved = gethostbyname(original)
+
+    # Don't use a resolved hostname for SSL requests otherwise the
+    # certificate will not match the IP address (resolved)
+    if parts.scheme == 'https':
+        resolved = original
+
     netloc = resolved + ':' + netloc[1]
     parts = (parts.scheme, netloc) + parts[2:]
     return urlparse.urlunparse(parts), original, resolved
