@@ -36,6 +36,10 @@ def clear_stats():
 
 
 def print_stats():
+    if _total is None:
+        total = 0
+    else:
+        total = _total
     all_res = []
     for values in _stats.values():
         all_res += values
@@ -45,7 +49,10 @@ def print_stats():
     if count == 0 or len(all_res) == 0:
         rps = avg = min_ = max_ = amp = 0
     else:
-        rps = len(all_res) / _total
+        if total == 0:
+            rps = 0
+        else:
+            rps = len(all_res) / total
         avg = sum(all_res) / len(all_res)
         max_ = max(all_res)
         min_ = min(all_res)
@@ -55,7 +62,7 @@ def print_stats():
     print('-------- Results --------')
 
     print('Successful calls\t\t%r' % len(all_res))
-    print('Total time       \t\t%.4f s' % _total)
+    print('Total time       \t\t%.4f s' % total)
     print('Average          \t\t%.4f s' % avg)
     print('Fastest          \t\t%.4f s' % min_)
     print('Slowest          \t\t%.4f s' % max_)

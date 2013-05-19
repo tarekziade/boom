@@ -4,10 +4,12 @@ import sys
 import shlex
 import StringIO
 
-from gevent.pywsgi import WSGIServer
-from boom._boom import run as runboom, main
 import requests
 import gevent
+from gevent.pywsgi import WSGIServer
+
+from boom._boom import run as runboom, main
+from boom import _boom
 
 
 class App(object):
@@ -42,8 +44,8 @@ _SERVER = None
 
 def _start():
     global _SERVER
-    print CMD
-    _SERVER = subprocess.Popen(CMD)
+    _SERVER = subprocess.Popen(CMD, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
 
 
 def _stop():
@@ -94,11 +96,7 @@ class TestBoom(unittest.TestCase):
         res = requests.get(self.server + 'calls').content
         self.assertEqual(int(res), 62 + 1)
         for error in errors:
-            print error
             self.assertIsInstance(error, requests.TooManyRedirects)
-
-
-class TestBoom(unittest.TestCase):
 
     def _run(self, *args):
         old = list(sys.argv)
@@ -129,6 +127,19 @@ class TestBoom(unittest.TestCase):
         code, stdout, stderr = self._run('http://that.impossiblename')
         self.assertEqual(code, 1)
         self.assertTrue('name does not exist' in stdout, stdout)
+
+    def test_clear_stats(self):
+        old_stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        try:
+            _boom.clear_stats()
+            _boom.print_stats()
+        finally:
+            sys.stdout.seek(0)
+            stdout = sys.stdout.read()
+            sys.stdout = old_stdout
+
+        self.assertTrue('Hahahaha' in stdout)
 
 
 if __name__ == '__main__':
