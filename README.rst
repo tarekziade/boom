@@ -27,7 +27,7 @@ Installation
 
 Boom! requires **Gevent** and **Requests**. If you are under Windows
 I strongly recommend installing Gevent with the *xxx-win32-py2.7.exe*
-installer you will find  at: https://github.com/SiteSupport/gevent/downloads
+installer you will find  at: https://github.com/surfly/gevent/downloads
 
 Boom! should work with the latest 1.x version or the latest 0.x version.
 
