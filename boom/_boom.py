@@ -253,7 +253,11 @@ def main():
     if args.requests is None and args.duration is None:
         args.requests = 1
 
-    url, original, resolved = resolve(args.url)
+    try:
+        url, original, resolved = resolve(args.url)
+    except gevent.dns.DNSError, e:
+        print_errors((e,))
+        sys.exit(1)
 
     def _split(header):
         header = header.split(':')

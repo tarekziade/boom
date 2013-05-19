@@ -2,9 +2,10 @@ import unittest
 import subprocess
 import sys
 import shlex
+import StringIO
 
 from gevent.pywsgi import WSGIServer
-from boom._boom import run as runboom
+from boom._boom import run as runboom, main
 import requests
 import gevent
 
@@ -95,6 +96,39 @@ class TestBoom(unittest.TestCase):
         for error in errors:
             print error
             self.assertIsInstance(error, requests.TooManyRedirects)
+
+
+class TestBoom(unittest.TestCase):
+
+    def _run(self, *args):
+        old = list(sys.argv)
+        sys.argv[:] = [sys.executable] + list(args)
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        exit_code = 0
+        sys.stdout = StringIO.StringIO()
+        sys.stderr = StringIO.StringIO()
+        try:
+            main()
+        except (Exception, SystemExit), e:
+            if isinstance(e, SystemExit):
+                exit_code = e.code
+            else:
+                exit_code = 1
+        finally:
+            sys.stdout.seek(0)
+            stdout = sys.stdout.read()
+            sys.stderr.seek(0)
+            stderr = sys.stdout.read()
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+
+        return exit_code, stdout, stderr
+
+    def test_dns_resolve(self):
+        code, stdout, stderr = self._run('http://that.impossiblename')
+        self.assertEqual(code, 1)
+        self.assertTrue('name does not exist' in stdout, stdout)
 
 
 if __name__ == '__main__':
