@@ -4,11 +4,12 @@ import sys
 import shlex
 import StringIO
 
+from gevent.pywsgi import WSGIServer
 import requests
 import gevent
 from gevent.pywsgi import WSGIServer
 
-from boom._boom import run as runboom, main
+from boom._boom import run as runboom, main, resolve
 from boom import _boom
 
 
@@ -140,6 +141,34 @@ class TestBoom(unittest.TestCase):
             sys.stdout = old_stdout
 
         self.assertTrue('Hahahaha' in stdout)
+
+    def test_resolve(self):
+        test_url = 'http://localhost:9999'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'http://127.0.0.1:9999')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, '127.0.0.1')
+
+    def test_ssl_resolve(self):
+        test_url = 'https://localhost:9999'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'https://localhost:9999')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, 'localhost')
+
+    def test_resolve_no_scheme(self):
+        test_url = 'http://localhost'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'http://127.0.0.1:80')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, '127.0.0.1')
+
+    def test_resolve_no_scheme_ssl(self):
+        test_url = 'https://localhost'
+        url, original, resolved = resolve(test_url)
+        self.assertEqual(url, 'https://localhost:443')
+        self.assertEqual(original, 'localhost')
+        self.assertEqual(resolved, 'localhost')
 
 
 if __name__ == '__main__':
