@@ -10,8 +10,11 @@ except ImportError:
     install_requires.append('argparse')
 
 
-with open('README.rst') as f:
-    README = f.read()
+description = ''
+
+for file_ in ('README', 'CHANGES', 'CONTRIBUTORS'):
+    with open('%s.rst' % file_) as f:
+        description += f.read() + '\n\n'
 
 
 classifiers = ["Programming Language :: Python",
@@ -23,7 +26,7 @@ setup(name='boom',
       version=__version__,
       url='https://github.com/tarekziade/boom',
       packages=find_packages(),
-      long_description=README,
+      long_description=description,
       description=("Simple HTTP Load tester"),
       author="Tarek Ziade",
       author_email="tarek@ziade.org",
