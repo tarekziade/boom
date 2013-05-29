@@ -88,10 +88,7 @@ def print_stats():
 
 def print_server_info(url, method, headers=None):
     res = requests.head(url)
-    try:
-        print 'Server Software: %(server)s' % res.headers
-    except KeyError:
-        pass
+    print 'Server Software: %s' % res.headers.get('server', 'Unknown')
 
     print 'Running %s %s' % (method, url)
 
