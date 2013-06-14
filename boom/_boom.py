@@ -19,6 +19,7 @@ from requests import RequestException
 
 from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
+from boom.pgbar import AnimatedProgressBar
 
 
 logger = logging.getLogger('boom')
@@ -27,6 +28,7 @@ _stats = defaultdict(list)
 _total = None
 _VERBS = ['GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS']
 _DATA_VERBS = ['POST', 'PUT', ]
+_progress_bar = None
 
 
 def clear_stats():
@@ -117,8 +119,12 @@ def _onecall(method, url, **options):
 
     res = method(url, **options)
     _stats[res.status_code].append(time.time() - start)
-    sys.stdout.write('=')
-    sys.stdout.flush()
+    if _progress_bar is not None:
+        _progress_bar + 1
+        _progress_bar.show_progress()
+    else:
+        sys.stdout.write('=')
+        sys.stdout.flush()
 
 onecall = wrap_errors((RequestException, ), _onecall)
 
@@ -155,6 +161,8 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
 
     try:
         if num is not None:
+            global _progress_bar
+            _progress_bar = AnimatedProgressBar(end=num, width=65)
             jobs = [pool.spawn(onecall, method, url, **options)
                     for i in range(num)]
             pool.join()
