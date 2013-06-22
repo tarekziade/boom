@@ -68,10 +68,10 @@ class TestBoom(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         _start()
-        self.server = 'http://0.0.0.0:8089/'
+        self.server = 'http://0.0.0.0:8089'
         while True:
             try:
-                requests.get(self.server)
+                requests.get(self.server + '/')
                 return
             except requests.ConnectionError:
                 gevent.sleep(.1)
@@ -81,20 +81,20 @@ class TestBoom(unittest.TestCase):
         _stop()
 
     def setUp(self):
-        self.get('reset')
+        self.get('/reset')
 
     def get(self, path):
         return requests.get(self.server + path)
 
     def test_basic_run(self):
         runboom(self.server, num=10, concurrency=1)
-        res = requests.get(self.server + 'calls').content
+        res = self.get('/calls').content
         self.assertEqual(int(res), 10)
 
     def test_hook(self):
         runboom(self.server, method='POST', num=10, concurrency=1,
                 hook='boom.tests.hook')
-        res = requests.get(self.server + 'calls').content
+        res = self.get('/calls').content
         self.assertEqual(int(res), 10)
 
     def test_connection_error(self):
@@ -104,8 +104,8 @@ class TestBoom(unittest.TestCase):
             self.assertIsInstance(error, requests.ConnectionError)
 
     def test_too_many_redirects(self):
-        errors = runboom(self.server + 'redir', num=2, concurrency=1)
-        res = requests.get(self.server + 'calls').content
+        errors = runboom(self.server + '/redir', num=2, concurrency=1)
+        res = self.get('/calls').content
         self.assertEqual(int(res), 62)
         for error in errors:
             self.assertIsInstance(error, requests.TooManyRedirects)
