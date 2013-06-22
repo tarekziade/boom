@@ -7,7 +7,6 @@ import StringIO
 from gevent.pywsgi import WSGIServer
 import requests
 import gevent
-from gevent.pywsgi import WSGIServer
 
 from boom._boom import run as runboom, main, resolve
 from boom import _boom
@@ -112,7 +111,6 @@ class TestBoom(unittest.TestCase):
             self.assertIsInstance(error, requests.TooManyRedirects)
 
     def _run(self, *args):
-        old = list(sys.argv)
         sys.argv[:] = [sys.executable] + list(args)
         old_stdout = sys.stdout
         old_stderr = sys.stderr
