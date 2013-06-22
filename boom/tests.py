@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 import subprocess
 import sys
 import shlex
@@ -54,8 +54,9 @@ def _start():
 
 def _stop():
     global _SERVER
-    _SERVER.terminate()
-    _SERVER = None
+    if _SERVER is not None:
+        _SERVER.terminate()
+        _SERVER = None
 
 
 def hook(method, url, options):
@@ -66,18 +67,18 @@ def hook(method, url, options):
 class TestBoom(unittest.TestCase):
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         _start()
-        self.server = 'http://0.0.0.0:8089'
+        cls.server = 'http://0.0.0.0:8089'
         while True:
             try:
-                requests.get(self.server + '/')
+                requests.get(cls.server + '/')
                 return
             except requests.ConnectionError:
                 gevent.sleep(.1)
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(cls):
         _stop()
 
     def setUp(self):

@@ -5,3 +5,4 @@ Contributors
 - Jack Pearkes
 - Chris Adams
 - Ralph Bean
+- Lukasz Balcerzak

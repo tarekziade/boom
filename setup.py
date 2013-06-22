@@ -1,14 +1,11 @@
 from setuptools import setup, find_packages
 from boom import __version__
+import sys
 
+install_requires = ['gevent', 'requests', 'unittest2']
 
-install_requires = ['gevent', 'requests']
-
-try:
-    import argparse     # NOQA
-except ImportError:
-    install_requires.append('argparse')
-
+if sys.version_info < (2, 7):
+    install_requires += ['argparse']
 
 description = ''
 
@@ -34,6 +31,7 @@ setup(name='boom',
       zip_safe=False,
       classifiers=classifiers,
       install_requires=install_requires,
+      test_suite='unittest2.collector',
       entry_points="""
       [console_scripts]
       boom = boom._boom:main
