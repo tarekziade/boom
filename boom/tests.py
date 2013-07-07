@@ -138,7 +138,7 @@ class TestBoom(unittest.TestCase):
     def test_dns_resolve(self):
         code, stdout, stderr = self._run('http://that.impossiblename')
         self.assertEqual(code, 1)
-        self.assertTrue('name does not exist' in stdout, stdout)
+        self.assertTrue('DNS resolution failed for' in stdout, stdout)
 
     def test_clear_stats(self):
         old_stdout = sys.stdout

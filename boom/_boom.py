@@ -20,6 +20,10 @@ from requests import RequestException
 from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
 
+try:
+    from gevent.dns import DNSError
+except ImportError:
+    from socket import error as DNSError
 
 logger = logging.getLogger('boom')
 
@@ -274,8 +278,9 @@ def main():
 
     try:
         url, original, resolved = resolve(args.url)
-    except gevent.dns.DNSError, e:
-        print_errors((e,))
+    except DNSError as e:
+        print_errors(("DNS resolution failed for %s (%s)" %
+                      (args.url, str(e)),))
         sys.exit(1)
 
     def _split(header):
