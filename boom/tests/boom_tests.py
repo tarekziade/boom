@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 import subprocess
 import sys
 import shlex
@@ -7,7 +7,6 @@ import StringIO
 from gevent.pywsgi import WSGIServer
 import requests
 import gevent
-from gevent.pywsgi import WSGIServer
 
 from boom._boom import run as runboom, main, resolve
 from boom import _boom
@@ -29,6 +28,10 @@ class App(object):
             self.numcalls += 1
             start_response('302 Found', [('Location', '/redir')])
             return []
+        elif env['PATH_INFO'] == '/reset':
+            self.numcalls = 0
+            start_response('200 OK', [('Content-Type', 'text/plain')])
+            return ['numcalls set to zero']
         else:
             start_response('404 Not Found', [('Content-Type', 'text/plain')])
             return ['%s' % env['PATH_INFO']]
@@ -51,8 +54,9 @@ def _start():
 
 def _stop():
     global _SERVER
-    _SERVER.terminate()
-    _SERVER = None
+    if _SERVER is not None:
+        _SERVER.terminate()
+        _SERVER = None
 
 
 def hook(method, url, options):
@@ -62,29 +66,37 @@ def hook(method, url, options):
 
 class TestBoom(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         _start()
-        self.server = 'http://0.0.0.0:8089/'
+        cls.server = 'http://0.0.0.0:8089'
         while True:
             try:
-                requests.get(self.server)
+                requests.get(cls.server + '/')
                 return
             except requests.ConnectionError:
                 gevent.sleep(.1)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         _stop()
+
+    def setUp(self):
+        self.get('/reset')
+
+    def get(self, path):
+        return requests.get(self.server + path)
 
     def test_basic_run(self):
         runboom(self.server, num=10, concurrency=1)
-        res = requests.get(self.server + 'calls').content
-        self.assertEqual(int(res), 10 + 1)
+        res = self.get('/calls').content
+        self.assertEqual(int(res), 10)
 
     def test_hook(self):
         runboom(self.server, method='POST', num=10, concurrency=1,
                 hook='boom.tests.hook')
-        res = requests.get(self.server + 'calls').content
-        self.assertEqual(int(res), 10 + 1)
+        res = self.get('/calls').content
+        self.assertEqual(int(res), 10)
 
     def test_connection_error(self):
         errors = runboom('http://localhost:9999', num=10, concurrency=1)
@@ -93,14 +105,13 @@ class TestBoom(unittest.TestCase):
             self.assertIsInstance(error, requests.ConnectionError)
 
     def test_too_many_redirects(self):
-        errors = runboom(self.server + 'redir', num=2, concurrency=1)
-        res = requests.get(self.server + 'calls').content
-        self.assertEqual(int(res), 62 + 1)
+        errors = runboom(self.server + '/redir', num=2, concurrency=1)
+        res = self.get('/calls').content
+        self.assertEqual(int(res), 62)
         for error in errors:
             self.assertIsInstance(error, requests.TooManyRedirects)
 
     def _run(self, *args):
-        old = list(sys.argv)
         sys.argv[:] = [sys.executable] + list(args)
         old_stdout = sys.stdout
         old_stderr = sys.stderr
