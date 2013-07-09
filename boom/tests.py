@@ -3,12 +3,13 @@ import subprocess
 import sys
 import shlex
 import StringIO
+import json
 
 from gevent.pywsgi import WSGIServer
 import requests
 import gevent
 
-from boom._boom import run as runboom, main, resolve
+from boom._boom import run as runboom, main, resolve, RunResults
 from boom import _boom
 
 
@@ -99,16 +100,16 @@ class TestBoom(unittest.TestCase):
         self.assertEqual(int(res), 10)
 
     def test_connection_error(self):
-        errors = runboom('http://localhost:9999', num=10, concurrency=1)
-        self.assertEqual(len(errors), 10)
-        for error in errors:
+        run_results = runboom('http://localhost:9999', num=10, concurrency=1)
+        self.assertEqual(len(run_results.errors), 10)
+        for error in run_results.errors:
             self.assertIsInstance(error, requests.ConnectionError)
 
     def test_too_many_redirects(self):
-        errors = runboom(self.server + '/redir', num=2, concurrency=1)
+        run_results = runboom(self.server + '/redir', num=2, concurrency=1)
         res = self.get('/calls').content
         self.assertEqual(int(res), 62)
-        for error in errors:
+        for error in run_results.errors:
             self.assertIsInstance(error, requests.TooManyRedirects)
 
     def _run(self, *args):
@@ -138,20 +139,7 @@ class TestBoom(unittest.TestCase):
     def test_dns_resolve(self):
         code, stdout, stderr = self._run('http://that.impossiblename')
         self.assertEqual(code, 1)
-        self.assertTrue('name does not exist' in stdout, stdout)
-
-    def test_clear_stats(self):
-        old_stdout = sys.stdout
-        sys.stdout = StringIO.StringIO()
-        try:
-            _boom.clear_stats()
-            _boom.print_stats()
-        finally:
-            sys.stdout.seek(0)
-            stdout = sys.stdout.read()
-            sys.stdout = old_stdout
-
-        self.assertTrue('Hahahaha' in stdout)
+        self.assertTrue('DNS resolution failed for' in stdout, stdout)
 
     def test_resolve(self):
         test_url = 'http://localhost:9999'
@@ -180,6 +168,33 @@ class TestBoom(unittest.TestCase):
         self.assertEqual(url, 'https://localhost:443')
         self.assertEqual(original, 'localhost')
         self.assertEqual(resolved, 'localhost')
+
+    def test_json_output(self):
+        results = RunResults()
+        results.status_code_counter['200'].extend([0, 0.1, 0.2])
+        results.total_time = 9
+
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+
+        try:
+            sys.stdout = StringIO.StringIO()
+            sys.stderr = StringIO.StringIO()
+            _boom.print_json(results)
+
+            sys.stdout.seek(0)
+            output = sys.stdout.read()
+        finally:
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+
+        actual = json.loads(output)
+        self.assertEqual(3, actual['count'])
+        self.assertAlmostEqual(0.333, actual['rps'], delta=0.1)
+        self.assertEqual(0, actual['min'])
+        self.assertEqual(0.2, actual['max'])
+        self.assertAlmostEqual(0.1, actual['avg'], delta=0.1)
+        self.assertEqual(0.2, actual['amp'])
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ import logging
 import argparse
 import sys
 import time
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import urlparse
 from copy import copy
 
@@ -10,7 +10,6 @@ from gevent import monkey
 import gevent
 from gevent.pool import Pool
 from gevent.socket import gethostbyname
-from gevent.util import wrap_errors
 
 monkey.patch_all()
 
@@ -20,53 +19,75 @@ from requests import RequestException
 from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
 
+try:
+    from gevent.dns import DNSError
+except ImportError:
+    from socket import error as DNSError
 
 logger = logging.getLogger('boom')
 
-_stats = defaultdict(list)
-_total = None
-_VERBS = ['GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS']
-_DATA_VERBS = ['POST', 'PUT', ]
+_VERBS = {'GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS'}
+_DATA_VERBS = {'POST', 'PUT'}
 
 
-def clear_stats():
-    global _total
-    _total = None
-    _stats.clear()
+class RunResults(object):
+    """Encapsulates the results of a single Boom run.
+
+       Contains a dictionary of status codes to lists of request durations,
+       a list of exception instances raised during the run, and the total time
+       of the run.
+    """
+
+    def __init__(self):
+        self.status_code_counter = defaultdict(list)
+        self.errors = []
+        self.total_time = None
 
 
-def print_stats():
-    if _total is None:
-        total = 0
-    else:
-        total = _total
+RunStats = namedtuple('RunStats', ['count', 'total_time', 'rps', 'avg', 'min',
+                                   'max', 'amp'])
+
+
+def calc_stats(results):
+    """Calculate stats (min, max, avg) from the given RunResults.
+
+       The statistics are returned as a RunStats object.
+    """
     all_res = []
-    for values in _stats.values():
+    count = 0
+    for values in results.status_code_counter.values():
         all_res += values
+        count += len(values)
 
-    count = sum(all_res)
+    cum_time = sum(all_res)
 
-    if count == 0 or len(all_res) == 0:
+    if cum_time == 0 or len(all_res) == 0:
         rps = avg = min_ = max_ = amp = 0
     else:
-        if total == 0:
+        if results.total_time == 0:
             rps = 0
         else:
-            rps = len(all_res) / total
+            rps = len(all_res) / float(results.total_time)
         avg = sum(all_res) / len(all_res)
         max_ = max(all_res)
         min_ = min(all_res)
         amp = max(all_res) - min(all_res)
+    return RunStats(count, results.total_time, rps, avg, min_, max_, amp)
+
+
+def print_stats(results):
+    stats = calc_stats(results)
+    rps = stats.rps
 
     print('')
     print('-------- Results --------')
 
-    print('Successful calls\t\t%r' % len(all_res))
-    print('Total time       \t\t%.4f s' % total)
-    print('Average          \t\t%.4f s' % avg)
-    print('Fastest          \t\t%.4f s' % min_)
-    print('Slowest          \t\t%.4f s' % max_)
-    print('Amplitude        \t\t%.4f s' % amp)
+    print('Successful calls\t\t%r' % stats.count)
+    print('Total time       \t\t%.4f s' % stats.total_time)
+    print('Average          \t\t%.4f s' % stats.avg)
+    print('Fastest          \t\t%.4f s' % stats.min)
+    print('Slowest          \t\t%.4f s' % stats.max)
+    print('Amplitude        \t\t%.4f s' % stats.amp)
     print('RPS              \t\t%d' % rps)
     if rps > 500:
         print('BSI              \t\tWoooooo Fast')
@@ -78,7 +99,7 @@ def print_stats():
         print('BSI              \t\tHahahaha')
     print('')
     print('-------- Status codes --------')
-    for code, items in _stats.items():
+    for code, items in results.status_code_counter.items():
         print('Code %d          \t\t%d times.' % (code, len(items)))
     print('')
     print('-------- Legend --------')
@@ -104,7 +125,18 @@ def print_errors(errors):
         print(error)
 
 
-def _onecall(method, url, **options):
+def print_json(results):
+    """Prints a JSON representation of the results to stdout."""
+    import json
+    stats = calc_stats(results)
+    print(json.dumps(stats._asdict()))
+
+
+def onecall(method, url, status_logger, status_dict, errors, **options):
+    """Performs a single HTTP call and puts the result into the status_dict.
+
+       RequestExceptions are caught and put into the errors set.
+    """
     start = time.time()
 
     if 'data' in options and callable(options['data']):
@@ -114,17 +146,18 @@ def _onecall(method, url, **options):
     if 'hook' in options:
         method, url, options = options['hook'](method, url, options)
         del options['hook']
-
-    res = method(url, **options)
-    _stats[res.status_code].append(time.time() - start)
-    sys.stdout.write('=')
-    sys.stdout.flush()
-
-onecall = wrap_errors((RequestException, ), _onecall)
+    try:
+        res = method(url, **options)
+    except RequestException as exc:
+        errors.append(exc)
+    else:
+        duration = time.time() - start
+        status_logger('=')
+        status_dict[res.status_code].append(duration)
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
-        auth=None, concurrency=1, headers=None, hook=None):
+        auth=None, concurrency=1, headers=None, hook=None, quiet=False):
 
     if headers is None:
         headers = {}
@@ -153,23 +186,36 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
     start = time.time()
     jobs = None
 
+    if quiet:
+        status_logger = lambda text: None
+    else:
+        def status_logger(text):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+
+    res = RunResults()
+
     try:
         if num is not None:
-            jobs = [pool.spawn(onecall, method, url, **options)
+            jobs = [pool.spawn(onecall, method, url, status_logger,
+                               res.status_code_counter, res.errors, **options)
                     for i in range(num)]
             pool.join()
         else:
             with gevent.Timeout(duration, False):
                 jobs = []
                 while True:
-                    jobs.append(pool.spawn(onecall, method, url, **options))
-
+                    jobs.append(pool.spawn(onecall, method, url, status_logger,
+                                           **options))
                 pool.join()
+    except KeyboardInterrupt:
+        # In case of a keyboard interrupt, just return whatever already got
+        # put into the result object.
+        pass
     finally:
-        global _total
-        _total = time.time() - start
+        res.total_time = time.time() - start
 
-    return [job.value for job in jobs if job.value]
+    return res
 
 
 def resolve(url):
@@ -196,21 +242,23 @@ def resolve(url):
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
-         headers=None, hook=None):
-    clear_stats()
-    print_server_info(url, method, headers=headers)
-    if requests is not None:
-        print('Running %d times per %d workers.' % (requests, concurrency))
-    else:
-        print('Running %d workers for at least %d seconds.' %
-              (concurrency, duration))
+         headers=None, hook=None, quiet=False):
+    if not quiet:
+        print_server_info(url, method, headers=headers)
 
-    sys.stdout.write('Starting the load [')
+        if requests is not None:
+            print('Running %d times per %d workers.' % (requests, concurrency))
+        else:
+            print('Running %d workers for at least %d seconds.' %
+                  (concurrency, duration))
+
+        sys.stdout.write('Starting the load [')
     try:
         return run(url, requests, duration, method, data, ct,
-                   auth, concurrency, headers, hook)
+                   auth, concurrency, headers, hook, quiet=quiet)
     finally:
-        print('] Done')
+        if not quiet:
+            print('] Done')
 
 
 def main():
@@ -244,6 +292,11 @@ def main():
                               "on every requests call"),
                         type=str)
 
+    parser.add_argument('--json-output',
+                        help='Prints the results in JSON instead of the '
+                             'default format',
+                        action='store_true')
+
     group = parser.add_mutually_exclusive_group()
 
     group.add_argument('-n', '--requests', help='Number of requests',
@@ -274,8 +327,9 @@ def main():
 
     try:
         url, original, resolved = resolve(args.url)
-    except gevent.dns.DNSError, e:
-        print_errors((e,))
+    except DNSError, e:
+        print_errors(("DNS resolution failed for %s (%s)" %
+                      (args.url, str(e)),))
         sys.exit(1)
 
     def _split(header):
@@ -297,17 +351,18 @@ def main():
         headers['Host'] = original
 
     try:
-        errors = load(url, args.requests, args.concurrency, args.duration,
-                      args.method, args.data, args.content_type, args.auth,
-                      headers=headers, hook=args.hook)
-        print_errors(errors)
-    except KeyboardInterrupt:
-        pass
+        res = load(url, args.requests, args.concurrency, args.duration,
+                   args.method, args.data, args.content_type, args.auth,
+                   headers=headers, hook=args.hook, quiet=args.json_output)
     except RequestException as e:
         print_errors((e, ))
         sys.exit(1)
 
-    print_stats()
+    if not args.json_output:
+        print_errors(res.errors)
+        print_stats(res)
+    else:
+        print_json(res)
     logger.info('Bye!')
 
 

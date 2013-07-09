@@ -99,6 +99,8 @@ Boom! has more options::
                             Number of requests
     -d DURATION, --duration DURATION
                             Duration in seconds
+    --json-output         Prints the results as a JSON object instead. Also 
+                          silences the progress logging.
 
 
 
