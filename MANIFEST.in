@@ -2,3 +2,4 @@ include README.rst
 include LICENSE
 include CHANGES.rst
 include CONTRIBUTORS.rst
+include Makefile
