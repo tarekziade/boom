@@ -26,8 +26,8 @@ except ImportError:
 
 logger = logging.getLogger('boom')
 
-_VERBS = {'GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS'}
-_DATA_VERBS = {'POST', 'PUT'}
+_VERBS = ('GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS')
+_DATA_VERBS = ('POST', 'PUT')
 
 
 class RunResults(object):
