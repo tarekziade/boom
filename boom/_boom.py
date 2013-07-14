@@ -18,6 +18,7 @@ from requests import RequestException
 
 from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
+from boom.pgbar import AnimatedProgressBar
 
 try:
     from gevent.dns import DNSError
@@ -33,15 +34,16 @@ _DATA_VERBS = ('POST', 'PUT')
 class RunResults(object):
     """Encapsulates the results of a single Boom run.
 
-       Contains a dictionary of status codes to lists of request durations,
-       a list of exception instances raised during the run, and the total time
-       of the run.
+    Contains a dictionary of status codes to lists of request durations,
+    a list of exception instances raised during the run, the total time
+    of the run and an animated progress bar.
     """
 
-    def __init__(self):
+    def __init__(self, num=1):
         self.status_code_counter = defaultdict(list)
         self.errors = []
         self.total_time = None
+        self.progress_bar = AnimatedProgressBar(end=num, width=65)
 
 
 RunStats = namedtuple('RunStats', ['count', 'total_time', 'rps', 'avg', 'min',
@@ -132,10 +134,11 @@ def print_json(results):
     print(json.dumps(stats._asdict()))
 
 
-def onecall(method, url, status_logger, status_dict, errors, **options):
-    """Performs a single HTTP call and puts the result into the status_dict.
+def onecall(method, url, status_logger, results, **options):
+    """Performs a single HTTP call and puts the result into the
+       status_code_counter.
 
-       RequestExceptions are caught and put into the errors set.
+    RequestExceptions are caught and put into the errors set.
     """
     start = time.time()
 
@@ -146,14 +149,18 @@ def onecall(method, url, status_logger, status_dict, errors, **options):
     if 'hook' in options:
         method, url, options = options['hook'](method, url, options)
         del options['hook']
+
     try:
         res = method(url, **options)
     except RequestException as exc:
-        errors.append(exc)
+        results.errors.append(exc)
     else:
         duration = time.time() - start
         status_logger('=')
-        status_dict[res.status_code].append(duration)
+        results.status_code_counter[res.status_code].append(duration)
+    finally:
+        results.progress_bar + 1
+        results.progress_bar.show_progress()
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
@@ -193,20 +200,19 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
             sys.stdout.write(text)
             sys.stdout.flush()
 
-    res = RunResults()
+    res = RunResults(num)
 
     try:
         if num is not None:
-            jobs = [pool.spawn(onecall, method, url, status_logger,
-                               res.status_code_counter, res.errors, **options)
-                    for i in range(num)]
+            jobs = [pool.spawn(onecall, method, url, status_logger, res,
+                               **options) for i in range(num)]
             pool.join()
         else:
             with gevent.Timeout(duration, False):
                 jobs = []
                 while True:
                     jobs.append(pool.spawn(onecall, method, url, status_logger,
-                                           **options))
+                                           res, **options))
                 pool.join()
     except KeyboardInterrupt:
         # In case of a keyboard interrupt, just return whatever already got

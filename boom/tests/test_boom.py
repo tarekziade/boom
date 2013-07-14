@@ -43,7 +43,8 @@ def run():
     WSGIServer(('0.0.0.0', 8089), app.handle).serve_forever()
 
 
-CMD = shlex.split("%s -c 'from boom.tests import run; run()'" % sys.executable)
+_CMD = "%s -c 'from boom.tests.test_boom import run; run()'"
+CMD = shlex.split(_CMD % sys.executable)
 _SERVER = None
 
 
@@ -95,7 +96,7 @@ class TestBoom(unittest.TestCase):
 
     def test_hook(self):
         runboom(self.server, method='POST', num=10, concurrency=1,
-                hook='boom.tests.hook')
+                hook='boom.tests.test_boom.hook')
         res = self.get('/calls').content
         self.assertEqual(int(res), 10)
 
