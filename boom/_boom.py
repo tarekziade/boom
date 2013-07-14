@@ -135,6 +135,8 @@ def print_server_info(url, method, headers=None):
 
 
 def print_errors(errors):
+    if len(errors) == 0:
+        return
     print('')
     print('-------- Errors --------')
     for error in errors:
