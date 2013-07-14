@@ -90,24 +90,26 @@ class TestBoom(unittest.TestCase):
         return requests.get(self.server + path)
 
     def test_basic_run(self):
-        runboom(self.server, num=10, concurrency=1)
+        runboom(self.server, num=10, concurrency=1, quiet=True)
         res = self.get('/calls').content
         self.assertEqual(int(res), 10)
 
     def test_hook(self):
         runboom(self.server, method='POST', num=10, concurrency=1,
-                hook='boom.tests.test_boom.hook')
+                hook='boom.tests.test_boom.hook', quiet=True)
         res = self.get('/calls').content
         self.assertEqual(int(res), 10)
 
     def test_connection_error(self):
-        run_results = runboom('http://localhost:9999', num=10, concurrency=1)
+        run_results = runboom('http://localhost:9999', num=10, concurrency=1,
+                              quiet=True)
         self.assertEqual(len(run_results.errors), 10)
         for error in run_results.errors:
             self.assertIsInstance(error, requests.ConnectionError)
 
     def test_too_many_redirects(self):
-        run_results = runboom(self.server + '/redir', num=2, concurrency=1)
+        run_results = runboom(self.server + '/redir', num=2, concurrency=1,
+                              quiet=True)
         res = self.get('/calls').content
         self.assertEqual(int(res), 62)
         for error in run_results.errors:
