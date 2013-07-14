@@ -6,4 +6,4 @@ Contributors
 - Chris Adams
 - Ralph Bean
 - Lukasz Balcerzak
-- Martin Voldřich
+- Martin Voldrich
