@@ -9,9 +9,8 @@ web app deployment. If you need a more complex tool,
 I'd suggest looking at `Funkload <http://funkload.nuxeo.org/>`_.
 
 Boom! was specifically written to replace my Apache Bench usage,
-because I was annoyed by some bugs and some stupid behaviors.
-
-And it was **so simple** to write it, thanks to Gevent.
+to provide a few missing features and fix a few annoyances I had
+with AB.
 
 I have no special ambitions for this tool, and since I have not
 found any tool like this in the Python-land, I wrote this one.
@@ -74,7 +73,8 @@ Boom! has more options::
     $ boom --help
     usage: boom [-h] [--version] [-m {GET,POST,DELETE,PUT,HEAD,OPTIONS}]
                 [--content-type CONTENT_TYPE] [-D DATA] [-c CONCURRENCY] [-a AUTH]
-                [--header HEADER] [--hook HOOK] [-n REQUESTS | -d DURATION]
+                [--header HEADER] [--hook HOOK]  [--json-output]
+                [-n REQUESTS | -d DURATION]
                 [url]
 
     Simple HTTP Load runner.
@@ -99,7 +99,7 @@ Boom! has more options::
                             Number of requests
     -d DURATION, --duration DURATION
                             Duration in seconds
-    --json-output         Prints the results as a JSON object instead. Also 
+    --json-output         Prints the results as a JSON object instead. Also
                           silences the progress logging.
 
 
