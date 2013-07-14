@@ -39,11 +39,23 @@ class RunResults(object):
     of the run and an animated progress bar.
     """
 
-    def __init__(self, num=1):
+    def __init__(self, num=1, quiet=False):
         self.status_code_counter = defaultdict(list)
         self.errors = []
         self.total_time = None
-        self.progress_bar = AnimatedProgressBar(end=num, width=65)
+        if num is not None:
+            self._progress_bar = AnimatedProgressBar(end=num, width=65)
+        else:
+            self._progress_bar = None
+        self.quiet = quiet
+
+    def incr(self):
+        if self._progress_bar is not None:
+            self._progress_bar + 1
+            self._progress_bar.show_progress()
+        else:
+            sys.stdout.write('.')
+            sys.stdout.flush()
 
 
 RunStats = namedtuple('RunStats', ['count', 'total_time', 'rps', 'avg', 'min',
@@ -134,7 +146,7 @@ def print_json(results):
     print(json.dumps(stats._asdict()))
 
 
-def onecall(method, url, status_logger, results, **options):
+def onecall(method, url, results, **options):
     """Performs a single HTTP call and puts the result into the
        status_code_counter.
 
@@ -156,11 +168,9 @@ def onecall(method, url, status_logger, results, **options):
         results.errors.append(exc)
     else:
         duration = time.time() - start
-        status_logger('=')
         results.status_code_counter[res.status_code].append(duration)
     finally:
-        results.progress_bar + 1
-        results.progress_bar.show_progress()
+        results.incr()
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
@@ -193,26 +203,19 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
     start = time.time()
     jobs = None
 
-    if quiet:
-        status_logger = lambda text: None
-    else:
-        def status_logger(text):
-            sys.stdout.write(text)
-            sys.stdout.flush()
-
-    res = RunResults(num)
+    res = RunResults(num, quiet)
 
     try:
         if num is not None:
-            jobs = [pool.spawn(onecall, method, url, status_logger, res,
-                               **options) for i in range(num)]
+            jobs = [pool.spawn(onecall, method, url, res, **options)
+                    for i in range(num)]
             pool.join()
         else:
             with gevent.Timeout(duration, False):
                 jobs = []
                 while True:
-                    jobs.append(pool.spawn(onecall, method, url, status_logger,
-                                           res, **options))
+                    jobs.append(pool.spawn(onecall, method, url, res,
+                                           **options))
                 pool.join()
     except KeyboardInterrupt:
         # In case of a keyboard interrupt, just return whatever already got
@@ -258,13 +261,13 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
             print('Running %d workers for at least %d seconds.' %
                   (concurrency, duration))
 
-        sys.stdout.write('Starting the load [')
+        sys.stdout.write('Starting the load')
     try:
         return run(url, requests, duration, method, data, ct,
                    auth, concurrency, headers, hook, quiet=quiet)
     finally:
         if not quiet:
-            print('] Done')
+            print(' Done')
 
 
 def main():
