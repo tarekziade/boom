@@ -50,6 +50,8 @@ class RunResults(object):
         self.quiet = quiet
 
     def incr(self):
+        if self.quiet:
+            return
         if self._progress_bar is not None:
             self._progress_bar + 1
             self._progress_bar.show_progress()
