@@ -45,12 +45,12 @@ Then::
 Basic usage
 ===========
 
-Basic usage example: 10 queries with a maximum concurrency of
+Basic usage example: 100 queries with a maximum concurrency of
 10 users::
 
-    $ boom http://localhost:80 -c 10 -n 10
+    $ boom http://localhost:80 -c 10 -n 100
     Server Software: nginx/1.2.2
-    Running 10 times per 10 workers.
+    Running 100 queries - concurrency: 10.
     Starting the load [===================================] Done
 
     -------- Results --------

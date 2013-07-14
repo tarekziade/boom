@@ -260,10 +260,11 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
         print_server_info(url, method, headers=headers)
 
         if requests is not None:
-            print('Running %d times per %d workers.' % (requests, concurrency))
+            print('Running %d queries - concurrency %d' % (requests,
+                                                           concurrency))
         else:
-            print('Running %d workers for at least %d seconds.' %
-                  (concurrency, duration))
+            print('Running for %d seconds - concurrency %d.' %
+                  (duration, concurrency))
 
         sys.stdout.write('Starting the load')
     try:
