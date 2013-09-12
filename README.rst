@@ -1,4 +1,3 @@
-
 .. image:: http://blog.ziade.org/boom.png
 
 
@@ -35,7 +34,7 @@ idea. You will need libevent for Gevent 0.x and libev for Gevent 1.x.
 
 Example under Ubuntu::
 
-    $ sudo apt-get install libevent python-dev
+    $ sudo apt-get install libevent libevent-dev python-dev
 
 Then::
 
