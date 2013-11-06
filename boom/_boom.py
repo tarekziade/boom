@@ -7,9 +7,9 @@ import urlparse
 from copy import copy
 
 from gevent import monkey
+from socket import gethostbyname
 import gevent
 from gevent.pool import Pool
-from gevent.socket import gethostbyname
 
 monkey.patch_all()
 
