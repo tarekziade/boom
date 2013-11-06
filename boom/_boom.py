@@ -7,7 +7,7 @@ import urlparse
 from copy import copy
 
 from gevent import monkey
-from socket import gethostbyname
+from socket import gethostbyname, gaierror
 import gevent
 from gevent.pool import Pool
 
@@ -20,10 +20,6 @@ from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
 from boom.pgbar import AnimatedProgressBar
 
-try:
-    from gevent.dns import DNSError
-except ImportError:
-    from socket import error as DNSError
 
 logger = logging.getLogger('boom')
 
@@ -341,7 +337,7 @@ def main():
 
     try:
         url, original, resolved = resolve(args.url)
-    except DNSError, e:
+    except gaierror, e:
         print_errors(("DNS resolution failed for %s (%s)" %
                       (args.url, str(e)),))
         sys.exit(1)
