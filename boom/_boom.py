@@ -1,25 +1,23 @@
-import logging
 import argparse
+import gevent
+import logging
+import requests
 import sys
 import time
-from collections import defaultdict, namedtuple
 import urlparse
+
+from collections import defaultdict, namedtuple
 from copy import copy
-
 from gevent import monkey
-from socket import gethostbyname, gaierror
-import gevent
 from gevent.pool import Pool
-
-monkey.patch_all()
-
-import requests
 from requests import RequestException
+from socket import gethostbyname, gaierror
 
 from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
 from boom.pgbar import AnimatedProgressBar
 
+monkey.patch_all()
 
 logger = logging.getLogger('boom')
 
@@ -84,6 +82,7 @@ def calc_stats(results):
         max_ = max(all_res)
         min_ = min(all_res)
         amp = max(all_res) - min(all_res)
+
     return RunStats(count, results.total_time, rps, avg, min_, max_, amp)
 
 
@@ -121,13 +120,12 @@ def print_stats(results):
 
 def print_server_info(url, method, headers=None):
     res = requests.head(url)
-    print 'Server Software: %s' % res.headers.get('server', 'Unknown')
-
-    print 'Running %s %s' % (method, url)
+    print('Server Software: %s' % res.headers.get('server', 'Unknown'))
+    print('Running %s %s' % (method, url))
 
     if headers:
         for k, v in headers.items():
-            print '\t%s: %s' % (k, v)
+            print('\t%s: %s' % (k, v))
 
 
 def print_errors(errors):
@@ -373,6 +371,7 @@ def main():
         print_stats(res)
     else:
         print_json(res)
+
     logger.info('Bye!')
 
 
