@@ -7,4 +7,3 @@ Contributors
 - Ralph Bean
 - Lukasz Balcerzak
 - Martin Voldrich
-- Andrea Crotti
