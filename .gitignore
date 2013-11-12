@@ -1,0 +1,3 @@
+/.tox
+*.pyc
+/boom.egg-info
