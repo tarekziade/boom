@@ -156,12 +156,17 @@ def onecall(method, url, results, **options):
         options = copy(options)
         options['data'] = options['data'](method, url, options)
 
-    if 'hook' in options:
-        method, url, options = options['hook'](method, url, options)
-        del options['hook']
+    if 'pre_hook' in options:
+        method, url, options = options['pre_hook'](method, url, options)
+        del options['pre_hook']
+
+    post_hook = lambda _res: _res  # dummy hook
+    if 'post_hook' in options:
+        post_hook = options['post_hook']
+        del options['post_hook']
 
     try:
-        res = method(url, **options)
+        res = post_hook(method(url, **options))
     except RequestException as exc:
         results.errors.append(exc)
     else:
@@ -172,7 +177,8 @@ def onecall(method, url, results, **options):
 
 
 def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
-        auth=None, concurrency=1, headers=None, hook=None, quiet=False):
+        auth=None, concurrency=1, headers=None, pre_hook=None, post_hook=None,
+        quiet=False):
 
     if headers is None:
         headers = {}
@@ -187,8 +193,11 @@ def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
     method = getattr(requests, method.lower())
     options = {'headers': headers}
 
-    if hook is not None:
-        options['hook'] = resolve_name(hook)
+    if pre_hook is not None:
+        options['pre_hook'] = resolve_name(pre_hook)
+
+    if post_hook is not None:
+        options['post_hook'] = resolve_name(post_hook)
 
     if data is not None:
         options['data'] = data
@@ -249,7 +258,7 @@ def resolve(url):
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
-         headers=None, hook=None, quiet=False):
+         headers=None, pre_hook=None, post_hook=None, quiet=False):
     if not quiet:
         print_server_info(url, method, headers=headers)
 
@@ -263,7 +272,7 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
         sys.stdout.write('Starting the load')
     try:
         return run(url, requests, duration, method, data, ct,
-                   auth, concurrency, headers, hook, quiet=quiet)
+                   auth, concurrency, headers, pre_hook, post_hook, quiet=quiet)
     finally:
         if not quiet:
             print(' Done')
@@ -295,9 +304,23 @@ def main():
     parser.add_argument('--header', help='Custom header. name:value',
                         type=str, action='append')
 
-    parser.add_argument('--hook',
-                        help=("Python callable that'll be used "
-                              "on every requests call"),
+    parser.add_argument('--pre-hook',
+                        help=("Python module path (eg: mymodule.pre_hook) "
+                              "to a callable which will be executed before "
+                              "doing a request for example: "
+                              "pre_hook(method, url, options). "
+                              "It must return a tupple of parameters given in "
+                              "function definition"),
+                        type=str)
+
+    parser.add_argument('--post-hook',
+                        help=("Python module path (eg: mymodule.post_hook) "
+                              "to a callable which will be executed after "
+                              "a request is done for example: "
+                              "eg. post_hook(response). "
+                              "It must return a given response parameter or "
+                              "raise an `boom._boom.RequestException` for "
+                              "failed request."),
                         type=str)
 
     parser.add_argument('--json-output',
@@ -361,7 +384,8 @@ def main():
     try:
         res = load(url, args.requests, args.concurrency, args.duration,
                    args.method, args.data, args.content_type, args.auth,
-                   headers=headers, hook=args.hook, quiet=args.json_output)
+                   headers=headers, pre_hook=args.pre_hook,
+                   post_hook=args.post_hook, quiet=args.json_output)
     except RequestException as e:
         print_errors((e, ))
         sys.exit(1)

@@ -9,7 +9,7 @@ from gevent.pywsgi import WSGIServer
 import requests
 import gevent
 
-from boom._boom import run as runboom, main, resolve, RunResults
+from boom._boom import run as runboom, main, resolve, RunResults, RequestException
 from boom import _boom
 
 
@@ -61,9 +61,19 @@ def _stop():
         _SERVER = None
 
 
-def hook(method, url, options):
+def pre_hook(method, url, options):
     options['files'] = {'file': open(__file__, 'rb')}
     return method, url, options
+
+
+def post_hook(response):
+    return response
+
+
+def post_hook_fails(data):
+    if 'pattern' not in data:
+        raise RequestException('missing pattern')
+    return data
 
 
 class TestBoom(unittest.TestCase):
@@ -94,10 +104,29 @@ class TestBoom(unittest.TestCase):
         res = self.get('/calls').content
         self.assertEqual(int(res), 10)
 
-    def test_hook(self):
+    def test_pre_hook(self):
         runboom(self.server, method='POST', num=10, concurrency=1,
-                hook='boom.tests.test_boom.hook', quiet=True)
+                pre_hook='boom.tests.test_boom.pre_hook', quiet=True)
         res = self.get('/calls').content
+        self.assertEqual(int(res), 10)
+
+    def test_post_hook(self):
+        run_results = runboom(self.server, method='GET', num=10, concurrency=1,
+                      post_hook='boom.tests.test_boom.post_hook', quiet=True)
+        res = self.get('/calls').content
+        self.assertEqual(run_results.errors, [])
+        self.assertEqual(int(res), 10)
+
+    def test_post_hook_fails(self):
+        run_results = runboom(self.server, method='GET', num=10, concurrency=1,
+                post_hook='boom.tests.test_boom.post_hook_fails', quiet=True)
+        res = self.get('/calls').content
+        self.assertEqual(len(run_results.errors), 10)
+
+        for err in run_results.errors:
+            self.assertEqual(True, isinstance(err, RequestException))
+            self.assertEqual(err.message, 'missing pattern')
+
         self.assertEqual(int(res), 10)
 
     def test_connection_error(self):
