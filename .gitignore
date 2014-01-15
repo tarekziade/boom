@@ -1,0 +1,4 @@
+*.pyc
+.tox/
+boom.egg-info/
+venv/

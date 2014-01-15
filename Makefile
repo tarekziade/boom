@@ -1,28 +1,28 @@
 HERE = $(shell pwd)
-BIN = $(HERE)/bin
+VENV = $(HERE)/venv
+BIN = $(VENV)/bin
 PYTHON = $(BIN)/python
 
 INSTALL = $(BIN)/pip install --no-deps
 VTENV_OPTS ?= --distribute
-
-BUILD_DIRS = bin build include lib lib64 man share
-
 
 .PHONY: all test docs build_extras
 
 all: build
 
 $(PYTHON):
-	virtualenv $(VTENV_OPTS) .
+	virtualenv $(VTENV_OPTS) $(VENV)
 
 build: $(PYTHON)
 	$(PYTHON) setup.py develop
 
 clean:
-	rm -rf $(BUILD_DIRS)
+	rm -rf $(VENV)
 
-test: build
+test_dependencies:
 	$(BIN)/pip install flake8 tox
+
+test: build test_dependencies
 	$(BIN)/flake8 boom
 	$(BIN)/tox
 

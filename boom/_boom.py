@@ -26,6 +26,7 @@ _DATA_VERBS = ('POST', 'PUT')
 
 
 class RunResults(object):
+
     """Encapsulates the results of a single Boom run.
 
     Contains a dictionary of status codes to lists of request durations,
@@ -38,7 +39,9 @@ class RunResults(object):
         self.errors = []
         self.total_time = None
         if num is not None:
-            self._progress_bar = AnimatedProgressBar(end=num, width=65)
+            self._progress_bar = AnimatedProgressBar(
+                end=num,
+                width=65)
         else:
             self._progress_bar = None
         self.quiet = quiet
@@ -54,8 +57,9 @@ class RunResults(object):
             sys.stdout.flush()
 
 
-RunStats = namedtuple('RunStats', ['count', 'total_time', 'rps', 'avg', 'min',
-                                   'max', 'amp'])
+RunStats = namedtuple(
+    'RunStats', ['count', 'total_time', 'rps', 'avg', 'min',
+                 'max', 'amp'])
 
 
 def calc_stats(results):
@@ -83,7 +87,9 @@ def calc_stats(results):
         min_ = min(all_res)
         amp = max(all_res) - min(all_res)
 
-    return RunStats(count, results.total_time, rps, avg, min_, max_, amp)
+    return (
+        RunStats(count, results.total_time, rps, avg, min_, max_, amp)
+    )
 
 
 def print_stats(results):
@@ -120,7 +126,9 @@ def print_stats(results):
 
 def print_server_info(url, method, headers=None):
     res = requests.head(url)
-    print('Server Software: %s' % res.headers.get('server', 'Unknown'))
+    print(
+        'Server Software: %s' %
+        res.headers.get('server', 'Unknown'))
     print('Running %s %s' % (method, url))
 
     if headers:
@@ -157,7 +165,8 @@ def onecall(method, url, results, **options):
         options['data'] = options['data'](method, url, options)
 
     if 'pre_hook' in options:
-        method, url, options = options['pre_hook'](method, url, options)
+        method, url, options = options[
+            'pre_hook'](method, url, options)
         del options['pre_hook']
 
     post_hook = lambda _res: _res  # dummy hook
@@ -176,7 +185,8 @@ def onecall(method, url, results, **options):
         results.incr()
 
 
-def run(url, num=1, duration=None, method='GET', data=None, ct='text/plain',
+def run(
+    url, num=1, duration=None, method='GET', data=None, ct='text/plain',
         auth=None, concurrency=1, headers=None, pre_hook=None, post_hook=None,
         quiet=False):
 
@@ -271,18 +281,21 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
 
         sys.stdout.write('Starting the load')
     try:
-        return run(url, requests, duration, method, data, ct,
-                   auth, concurrency, headers, pre_hook, post_hook, quiet=quiet)
+        return run(url, requests, duration, method,
+                   data, ct, auth, concurrency, headers,
+                   pre_hook, post_hook, quiet=quiet)
     finally:
         if not quiet:
             print(' Done')
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Simple HTTP Load runner.')
+    parser = argparse.ArgumentParser(
+        description='Simple HTTP Load runner.')
 
-    parser.add_argument('--version', action='store_true', default=False,
-                        help='Displays version and exits.')
+    parser.add_argument(
+        '--version', action='store_true', default=False,
+        help='Displays version and exits.')
 
     parser.add_argument('-m', '--method', help='HTTP Method',
                         type=str, default='GET', choices=_VERBS)
@@ -358,7 +371,7 @@ def main():
 
     try:
         url, original, resolved = resolve(args.url)
-    except gaierror, e:
+    except gaierror as e:
         print_errors(("DNS resolution failed for %s (%s)" %
                       (args.url, str(e)),))
         sys.exit(1)
@@ -382,10 +395,11 @@ def main():
         headers['Host'] = original
 
     try:
-        res = load(url, args.requests, args.concurrency, args.duration,
-                   args.method, args.data, args.content_type, args.auth,
-                   headers=headers, pre_hook=args.pre_hook,
-                   post_hook=args.post_hook, quiet=args.json_output)
+        res = load(
+            url, args.requests, args.concurrency, args.duration,
+            args.method, args.data, args.content_type, args.auth,
+            headers=headers, pre_hook=args.pre_hook,
+            post_hook=args.post_hook, quiet=args.json_output)
     except RequestException as e:
         print_errors((e, ))
         sys.exit(1)
