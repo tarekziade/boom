@@ -3,7 +3,7 @@ VENV = $(HERE)/venv
 BIN = $(VENV)/bin
 PYTHON = $(BIN)/python
 
-NSTALL = $(BIN)/pip install --no-deps
+INSTALL = $(BIN)/pip install --no-deps
 VTENV_OPTS ?= --distribute
 
 .PHONY: all test docs build_extras
