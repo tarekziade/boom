@@ -11,6 +11,7 @@ from copy import copy
 from gevent import monkey
 from gevent.pool import Pool
 from requests import RequestException
+from requests.packages.urllib3.util import parse_url
 from socket import gethostbyname, gaierror
 
 from boom import __version__, _patch     # NOQA
@@ -245,26 +246,27 @@ def run(
 
 
 def resolve(url):
-    parts = urlparse.urlparse(url)
-    netloc = parts.netloc.rsplit(':')
+    parts = parse_url(url)
 
-    if len(netloc) == 1:
-        if parts.scheme == 'https':
-            netloc.append('443')
-        else:
-            netloc.append('80')
+    if not parts.port and parts.scheme == 'https':
+        port = 443
+    elif not parts.port and parts.scheme == 'http':
+        port = 80
+    else:
+        port = parts.port
 
-    original = netloc[0]
-    resolved = gethostbyname(original)
+    original = parts.host
+    resolved = gethostbyname(parts.host)
 
     # Don't use a resolved hostname for SSL requests otherwise the
     # certificate will not match the IP address (resolved)
-    if parts.scheme == 'https':
-        resolved = original
+    host = resolved if parts.scheme != 'https' else parts.host
+    netloc = '%s:%d' % (host, port) if port else host
 
-    netloc = resolved + ':' + netloc[1]
-    parts = (parts.scheme, netloc) + parts[2:]
-    return urlparse.urlunparse(parts), original, resolved
+    return (urlparse.urlunparse((parts.scheme, netloc, parts.path or '',
+                                 '', parts.query or '',
+                                 parts.fragment or '')),
+            original, host)
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
