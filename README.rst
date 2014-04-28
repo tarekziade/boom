@@ -103,7 +103,7 @@ Boom! has more options::
                             callable which will be executed after a request is
                             done for example: eg. post_hook(response). It must
                             return a given response parameter or raise an
-                            `boom._boom.RequestException` for failed request.
+                            `boom.boom.RequestException` for failed request.
       --json-output         Prints the results in JSON instead of the default
                             format
       -n REQUESTS, --requests REQUESTS

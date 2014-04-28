@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from boom import __version__
+from boom.boom import __version__
 import sys
 
 install_requires = ['gevent', 'requests>=2.3.0']
@@ -34,5 +34,5 @@ setup(name='boom',
       test_suite='unittest2.collector',
       entry_points="""
       [console_scripts]
-      boom = boom._boom:main
+      boom = boom.boom:main
       """)

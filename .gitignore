@@ -2,3 +2,4 @@
 .tox/
 boom.egg-info/
 venv/
+dist/

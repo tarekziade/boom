@@ -12,9 +12,9 @@ from gevent.pywsgi import WSGIServer
 import requests
 import gevent
 
-from boom._boom import (run as runboom, main,
-                        resolve, RunResults, RequestException)
-from boom import _boom
+from boom.boom import (run as runboom, main,
+                       resolve, RunResults, RequestException)
+from boom import boom
 
 
 if sys.version_info[0] < 3:
@@ -240,8 +240,7 @@ class TestBoom(unittest.TestCase):
         try:
             sys.stdout = StringIO()
             sys.stderr = StringIO()
-            _boom.print_json(results)
-
+            boom.print_json(results)
             sys.stdout.seek(0)
             output = sys.stdout.read()
         finally:
