@@ -5,6 +5,7 @@ import requests
 import sys
 import time
 import urlparse
+import math
 
 from collections import defaultdict, namedtuple
 from copy import copy
@@ -59,7 +60,7 @@ class RunResults(object):
 
 RunStats = namedtuple(
     'RunStats', ['count', 'total_time', 'rps', 'avg', 'min',
-                 'max', 'amp'])
+                 'max', 'amp', 'stdev'])
 
 
 def calc_stats(results):
@@ -86,9 +87,10 @@ def calc_stats(results):
         max_ = max(all_res)
         min_ = min(all_res)
         amp = max(all_res) - min(all_res)
+        stdev = math.sqrt(sum((x-avg)**2 for x in all_res) / count)
 
     return (
-        RunStats(count, results.total_time, rps, avg, min_, max_, amp)
+        RunStats(count, results.total_time, rps, avg, min_, max_, amp, stdev)
     )
 
 
@@ -100,12 +102,13 @@ def print_stats(results):
     print('-------- Results --------')
 
     print('Successful calls\t\t%r' % stats.count)
-    print('Total time       \t\t%.4f s' % stats.total_time)
-    print('Average          \t\t%.4f s' % stats.avg)
-    print('Fastest          \t\t%.4f s' % stats.min)
-    print('Slowest          \t\t%.4f s' % stats.max)
-    print('Amplitude        \t\t%.4f s' % stats.amp)
-    print('RPS              \t\t%d' % rps)
+    print('Total time        \t\t%.4f s  ' % stats.total_time)
+    print('Average           \t\t%.4f s  ' % stats.avg)
+    print('Fastest           \t\t%.4f s  ' % stats.min)
+    print('Slowest           \t\t%.4f s  ' % stats.max)
+    print('Amplitude         \t\t%.4f s  ' % stats.amp)
+    print('Standard deviation\t\t%.6f' % stats.stdev)
+    print('RPS               \t\t%d' % rps)
     if rps > 500:
         print('BSI              \t\tWoooooo Fast')
     elif rps > 100:
