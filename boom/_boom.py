@@ -78,7 +78,7 @@ def calc_stats(results):
     cum_time = sum(all_res)
 
     if cum_time == 0 or len(all_res) == 0:
-        rps = avg = min_ = max_ = amp = 0
+        rps = avg = min_ = max_ = amp = stdev = 0
     else:
         if results.total_time == 0:
             rps = 0
