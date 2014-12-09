@@ -237,4 +237,4 @@ class TestBoom(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    run()
+    unittest.main()
