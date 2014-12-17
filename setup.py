@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from boom import __version__
 import sys
 
-install_requires = ['gevent', 'requests', 'unittest2']
+install_requires = ['gevent', 'requests']
 
 if sys.version_info < (2, 7):
     install_requires += ['argparse']
