@@ -1,11 +1,19 @@
+from __future__ import absolute_import
 import argparse
 import gevent
 import logging
 import requests
 import sys
 import time
-import urlparse
+
+try:
+    import urlparse
+except ImportError:
+    from urllib import parse as urlparse
+
 import math
+
+
 
 from collections import defaultdict, namedtuple
 from copy import copy
@@ -15,9 +23,15 @@ from requests import RequestException
 from requests.packages.urllib3.util import parse_url
 from socket import gethostbyname, gaierror
 
-from boom import __version__, _patch     # NOQA
-from boom.util import resolve_name
-from boom.pgbar import AnimatedProgressBar
+if sys.version_info[0] < 3:
+    PY3 = False
+else:
+    PY3 = True
+
+
+from . import __version__, _patch     # NOQA
+from .util import resolve_name
+from .pgbar import AnimatedProgressBar
 
 monkey.patch_all()
 

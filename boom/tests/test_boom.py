@@ -2,7 +2,10 @@ import unittest2 as unittest
 import subprocess
 import sys
 import shlex
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import json
 
 from gevent.pywsgi import WSGIServer
@@ -14,6 +17,12 @@ from boom._boom import (run as runboom, main,
 from boom import _boom
 
 
+if sys.version_info[0] < 3:
+    PY3 = False
+else:
+    PY3 = True
+
+
 class App(object):
 
     def __init__(self):
@@ -23,10 +32,16 @@ class App(object):
         if env['PATH_INFO'] == '/':
             self.numcalls += 1
             start_response('200 OK', [('Content-Type', 'text/html')])
-            return ["<b>hello world</b>"]
+            if PY3:
+                return ["<b>hello world</b>".encode('latin-1')]
+            else:
+                return ["<b>hello world</b>"]
         elif env['PATH_INFO'] == '/calls':
             start_response('200 OK', [('Content-Type', 'text/plain')])
-            return [str(self.numcalls)]
+            if PY3:
+                return [str(self.numcalls).encode('latin-1')]
+            else:
+                return [str(self.numcalls)]
         elif env['PATH_INFO'] == '/redir':
             self.numcalls += 1
             start_response('302 Found', [('Location', '/redir')])
@@ -34,11 +49,17 @@ class App(object):
         elif env['PATH_INFO'] == '/reset':
             self.numcalls = 0
             start_response('200 OK', [('Content-Type', 'text/plain')])
-            return ['numcalls set to zero']
+            if PY3:
+                return ['numcalls set to zero'.encode('latin-1')]
+            else:
+                return ['numcalls set to zero']
         else:
-            start_response(
-                '404 Not Found', [('Content-Type', 'text/plain')])
-            return ['%s' % env['PATH_INFO']]
+            start_response('404 Not Found',
+                           [('Content-Type', 'text/plain')])
+            if PY3:
+                return [env['PATH_INFO'].encode('latin-1')]
+            else:
+                return [env['PATH_INFO']]
 
 
 def run():
@@ -130,7 +151,7 @@ class TestBoom(unittest.TestCase):
 
         for err in run_results.errors:
             self.assertEqual(True, isinstance(err, RequestException))
-            self.assertEqual(err.message, 'missing pattern')
+            self.assertEqual(err.__str__(), 'missing pattern')
 
         self.assertEqual(int(res), 10)
 
@@ -156,8 +177,8 @@ class TestBoom(unittest.TestCase):
         old_stdout = sys.stdout
         old_stderr = sys.stderr
         exit_code = 0
-        sys.stdout = StringIO.StringIO()
-        sys.stderr = StringIO.StringIO()
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
         try:
             main()
         except (Exception, SystemExit) as e:
@@ -217,8 +238,8 @@ class TestBoom(unittest.TestCase):
         old_stderr = sys.stderr
 
         try:
-            sys.stdout = StringIO.StringIO()
-            sys.stderr = StringIO.StringIO()
+            sys.stdout = StringIO()
+            sys.stderr = StringIO()
             _boom.print_json(results)
 
             sys.stdout.seek(0)

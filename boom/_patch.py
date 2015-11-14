@@ -1,6 +1,12 @@
+import sys
 import threading
 from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
                        _profile_hook, _format_exc)
+
+if sys.version_info[0] < 3:
+    PY3 = False
+else:
+    PY3 = True
 
 
 # see http://bugs.python.org/issue1596321
@@ -75,5 +81,8 @@ def _stop(self):
 
 threading.Thread._Thread__bootstrap_inner = _bootstrap_inner
 threading.Thread._Thread__delete = _delete
-threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
+if PY3:
+    threading.Thread._Thread__stop_old = threading.Thread._stop
+else:
+    threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
 threading.Thread._Thread__stop = _stop

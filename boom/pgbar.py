@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # flake8: noqa
+from __future__ import print_function
 """
 progressbar.py hosted on https://github.com/ikame/progressbar
 
@@ -123,5 +124,5 @@ if __name__ == '__main__':
         time.sleep(0.1)
         if p.progress == 100:
             break
-    print # new line
+    print('') # new line
 
