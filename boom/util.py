@@ -1,5 +1,10 @@
 import sys
 
+if sys.version_info[0] < 3:
+    PY3 = False
+else:
+    PY3 = True
+
 try:
     from importlib import import_module         # NOQA
 except ImportError:
@@ -96,6 +101,10 @@ def resolve_name(import_name, silent=False):
     :return: imported object
     """
     # force the import name to automatically convert to strings
+    if PY3:
+        unicode = str
+    else:
+        global unicode
     if isinstance(import_name, unicode):
         import_name = str(import_name)
     try:
@@ -109,6 +118,8 @@ def resolve_name(import_name, silent=False):
         # if the module is a package
         if isinstance(obj, unicode):
             obj = obj.encode('utf-8')
+        if isinstance(obj, bytes):
+            obj = obj.decode('utf-8')
         try:
             return getattr(__import__(module, None, None, [obj]), obj)
         except (ImportError, AttributeError):
@@ -117,6 +128,6 @@ def resolve_name(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            raise ImportStringError(import_name, e)
