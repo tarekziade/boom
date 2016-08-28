@@ -5,7 +5,8 @@
 
 Boom! is a script you can use to quickly smoke-test your
 web app deployment. If you need a more complex tool,
-I'd suggest looking at `Funkload <http://funkload.nuxeo.org/>`_.
+I'd suggest looking at `Funkload <http://funkload.nuxeo.org/>`_
+or `Locust <https://github.com/locustio/locust>`_.
 
 Boom! was specifically written to replace my Apache Bench usage,
 to provide a few missing features and fix a few annoyances I had
