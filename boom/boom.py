@@ -24,7 +24,6 @@ from boom import __version__, _patch     # NOQA
 from boom.util import resolve_name
 from boom.pgbar import AnimatedProgressBar
 
-
 if sys.version_info[0] < 3:
     PY3 = False
 else:
@@ -33,7 +32,6 @@ else:
 
 monkey.patch_all()
 logger = logging.getLogger('boom')
-
 _VERBS = ('GET', 'POST', 'DELETE', 'PUT', 'HEAD', 'OPTIONS')
 _DATA_VERBS = ('POST', 'PUT')
 

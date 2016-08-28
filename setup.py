@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from boom.boom import __version__
+from boom import __version__
 import sys
 
 install_requires = ['gevent', 'requests>=2.3.0']
