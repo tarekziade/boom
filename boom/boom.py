@@ -231,10 +231,8 @@ def run(
         options['auth'] = tuple(auth.split(':', 1))
 
     pool = Pool(concurrency)
-
     start = time.time()
     jobs = None
-
     res = RunResults(num, quiet)
 
     try:
@@ -276,6 +274,10 @@ def resolve(url):
     # certificate will not match the IP address (resolved)
     host = resolved if parts.scheme != 'https' else parts.host
     netloc = '%s:%d' % (host, port) if port else host
+
+    if port not in (443, 80):
+        host += ':%d' % port
+        original += ':%d' % port
 
     return (urlparse.urlunparse((parts.scheme, netloc, parts.path or '',
                                  '', parts.query or '',

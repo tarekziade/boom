@@ -205,15 +205,15 @@ class TestBoom(unittest.TestCase):
         test_url = 'http://localhost:9999'
         url, original, resolved = resolve(test_url)
         self.assertEqual(url, 'http://127.0.0.1:9999')
-        self.assertEqual(original, 'localhost')
-        self.assertEqual(resolved, '127.0.0.1')
+        self.assertEqual(original, 'localhost:9999')
+        self.assertEqual(resolved, '127.0.0.1:9999')
 
     def test_ssl_resolve(self):
         test_url = 'https://localhost:9999'
         url, original, resolved = resolve(test_url)
         self.assertEqual(url, 'https://localhost:9999')
-        self.assertEqual(original, 'localhost')
-        self.assertEqual(resolved, 'localhost')
+        self.assertEqual(original, 'localhost:9999')
+        self.assertEqual(resolved, 'localhost:9999')
 
     def test_resolve_no_scheme(self):
         test_url = 'http://localhost'
