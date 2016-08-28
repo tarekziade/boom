@@ -27,14 +27,14 @@ Boom! requires **Gevent** and **Requests**. If you are under Windows
 I strongly recommend installing Gevent with the *xxx-win32-py2.7.exe*
 installer you will find  at: https://github.com/surfly/gevent/downloads
 
-Boom! should work with the latest 1.x version or the latest 0.x version.
+Boom! should work with the latest versions.
 
 If you are under Linux, installing the source version is usually a better
-idea. You will need libevent for Gevent 0.x and libev for Gevent 1.x.
+idea. You will need libev for Gevent.
 
 Example under Ubuntu::
 
-    $ sudo apt-get install libevent libevent-dev python-dev
+    $ sudo apt-get install libev libev-dev python-dev
 
 Then::
 
