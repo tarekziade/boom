@@ -1,6 +1,20 @@
 History
 =======
 
+
+0.9 - 2016-08-28
+----------------
+
+- python 3 support
+- removal of python 2.6 support
+- fix unittest2 dep
+- Added --validator option for validating request response data
+- Change --hook to --pre-hook
+- added new option --post-hook for validating request response data
+- fixed the error handling of failed DNS resolution
+- Replace urlparse.urlparse with urllib3's parse_url
+
+
 0.8 - 2013-07-14
 ----------------
 
