@@ -101,10 +101,10 @@ def resolve_name(import_name, silent=False):
     :return: imported object
     """
     # force the import name to automatically convert to strings
-    if PY3:
-        unicode = str
-    else:
+    if not PY3:
         global unicode
+    else:
+        unicode = str
     if isinstance(import_name, unicode):
         import_name = str(import_name)
     try:
