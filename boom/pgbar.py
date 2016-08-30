@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# flake8: noqa
 from __future__ import print_function
 """
 progressbar.py hosted on https://github.com/ikame/progressbar
@@ -57,7 +56,8 @@ class ProgressBar(object):
         incremental
     """
 
-    def __init__(self, start=0, end=10, width=12, fill='=', blank='.', format='[%(fill)s>%(blank)s] %(progress)s%%',
+    def __init__(self, start=0, end=10, width=12, fill='=', blank='.',
+                 format='[%(fill)s>%(blank)s] %(progress)s%%',
                  incremental=True):
         super(ProgressBar, self).__init__()
 
@@ -68,7 +68,7 @@ class ProgressBar(object):
         self.blank = blank
         self.format = format
         self.incremental = incremental
-        self.step = 100 / float(width) #fix
+        self.step = 100 / float(width)  # fix
         self.reset()
 
     def __add__(self, increment):
@@ -80,10 +80,11 @@ class ProgressBar(object):
         return self
 
     def __str__(self):
-        progressed = int(self.progress / self.step) #fix
+        progressed = int(self.progress / self.step)  # fix
         fill = progressed * self.fill
         blank = (self.width - progressed) * self.blank
-        return self.format % {'fill': fill, 'blank': blank, 'progress': int(self.progress)}
+        return self.format % {'fill': fill, 'blank': blank,
+                              'progress': int(self.progress)}
 
     __repr__ = __str__
 
@@ -98,7 +99,8 @@ class ProgressBar(object):
 
 class AnimatedProgressBar(ProgressBar):
     """Extends ProgressBar to allow you to use it straighforward on a script.
-    Accepts an extra keyword argument named `stdout` (by default use sys.stdout)
+    Accepts an extra keyword argument named `stdout`
+    (by default use sys.stdout)
     and may be any file-object to which send the progress status.
     """
 
@@ -124,5 +126,4 @@ if __name__ == '__main__':
         time.sleep(0.1)
         if p.progress == 100:
             break
-    print('') # new line
-
+    print('')  # new line
