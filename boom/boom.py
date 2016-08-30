@@ -20,7 +20,7 @@ from requests import RequestException
 from requests.packages.urllib3.util import parse_url
 from socket import gethostbyname, gaierror
 
-from boom import __version__, _patch     # NOQA
+from boom import __version__
 from boom.util import resolve_name
 from boom.pgbar import AnimatedProgressBar
 
