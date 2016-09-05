@@ -1,5 +1,19 @@
 .. image:: http://blog.ziade.org/boom.png
 
+.. image:: https://img.shields.io/coveralls/tarekziade/boom.svg
+    :target: https://coveralls.io/r/tarekziade/boom
+
+.. image:: https://img.shields.io/travis/tarekziade/boom/master.svg
+    :target: https://travis-ci.org/tarekziade/boom
+
+.. image:: https://img.shields.io/pypi/v/boom.svg
+    :target: https://pypi.python.org/pypi/boom
+
+.. image:: https://img.shields.io/pypi/pyversions/boom.svg
+    :target: https://pypi.python.org/pypi/boom/
+
+.. image:: https://img.shields.io/pypi/dd/boom.svg
+    :target: https://pypi.python.org/pypi/boom/
 
 **Boom!** is a simple command line tool to send some load to a web app.
 
