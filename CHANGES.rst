@@ -7,6 +7,7 @@ History
 - Update `.gitignore` for pycharm users
 - Alphabetize contributors list for simplicity (read OCD)
 - Replace BSI response of Hahahaha with sadface
+- Add Travis CI
 
 
 0.9 - 2016-08-28

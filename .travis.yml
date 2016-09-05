@@ -8,7 +8,5 @@ python:
   - "3.5"
   - "3.5-dev" # 3.5 development branch
   - "nightly" # currently points to 3.6-dev
-script:
-  - make build
-  - make test_dependencies
-  - nosetests -s boom/tests/ --with-coverage --cover-package=boom
+install: "pip install -r requirements-test.txt"
+script: nosetests -s boom/tests/ --with-coverage --cover-package=boom
