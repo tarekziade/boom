@@ -1,17 +1,21 @@
+Owner
+=====
+
+- Tarek Ziade
+
 Contributors
 ============
 
-- Tomas Hanacek
-- Jack Pearkes
 - Chris Adams
-- Ralph Bean
-- Lukasz Balcerzak
-- Martin Voldrich
-- Adolfo Fitoria
-- Andrea Crotti
-- Venelin Stoykov
-- Ralph Bean
-- Wang Zhen Pu
 - Rikard Anglerud
+- Lukasz Balcerzak
+- Ralph Bean
+- Andrea Crotti
+- Adolfo Fitoria
+- Tomas Hanacek
+- Hanley Hansen
 - Marcin Kuzminski
-
+- Jack Pearkes
+- Wang Zhen Pu
+- Venelin Stoykov
+- Martin Voldrich
