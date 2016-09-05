@@ -24,11 +24,6 @@ from boom import __version__
 from boom.util import resolve_name
 from boom.pgbar import AnimatedProgressBar
 
-if sys.version_info[0] < 3:
-    PY3 = False
-else:
-    PY3 = True
-
 
 monkey.patch_all()
 logger = logging.getLogger('boom')
