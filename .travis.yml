@@ -9,5 +9,6 @@ python:
   - "3.5-dev" # 3.5 development branch
   - "nightly" # currently points to 3.6-dev
 script:
+  - make build
   - make test_dependencies
   - make test
