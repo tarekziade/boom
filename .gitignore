@@ -4,3 +4,4 @@ boom.egg-info/
 venv/
 dist/
 .idea/
+.coverage
