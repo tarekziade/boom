@@ -1,5 +1,6 @@
 .. image:: http://blog.ziade.org/boom.png
 
+
 .. image:: https://img.shields.io/coveralls/tarekziade/boom.svg
     :target: https://coveralls.io/r/tarekziade/boom
 
