@@ -121,7 +121,7 @@ def print_stats(results):
     elif rps > 50:
         print('BSI              \t\tMeh')
     else:
-        print('BSI              \t\tHahahaha')
+        print('BSI              \t\t:(')
     print('')
     print('-------- Status codes --------')
     for code, items in results.status_code_counter.items():
