@@ -1,13 +1,15 @@
 History
 =======
 
-0.9.1 - 2016-09-05
-------------------
+1.0 - 2016-09-05
+----------------
 
 - Update `.gitignore` for pycharm users
 - Alphabetize contributors list for simplicity (read OCD)
 - Replace BSI response of Hahahaha with sadface
 - Add Travis CI
+- Add Coveralls
+- Update tox to test for 2.7 and 3.5 locally (travis ci handles the rest)
 
 
 0.9 - 2016-08-28
