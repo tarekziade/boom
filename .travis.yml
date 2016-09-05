@@ -11,4 +11,4 @@ python:
 script:
   - make build
   - make test_dependencies
-  - make test
+  - nosetests -s boom/tests/ --with-coverage --cover-package=boom
