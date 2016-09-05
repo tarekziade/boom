@@ -125,3 +125,5 @@ resources. It's not a problem to spawn 1000 users and hammer a web application w
 
 If you are interested in this project, you are welcome to join the fun at
 https://github.com/tarekziade/boom
+
+Make sure to add yourself to the contributors list if your PR gets merged. And make sure it's in alphabetical order!
