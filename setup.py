@@ -14,10 +14,15 @@ for file_ in ('README', 'CHANGES', 'CONTRIBUTORS'):
         description += f.read() + '\n\n'
 
 
-classifiers = ["Programming Language :: Python",
+classifiers = ["Development Status :: 5 - Production/Stable",
                "License :: OSI Approved :: Apache Software License",
-               "Development Status :: 1 - Planning"]
-
+               "Programming Language :: Python",
+               "Programming Language :: Python :: 2.6",
+               "Programming Language :: Python :: 2.7",
+               "Programming Language :: Python :: 3.3",
+               "Programming Language :: Python :: 3.4",
+               "Programming Language :: Python :: 3.5",
+               "Programming Language :: Python :: 3.6"]
 
 setup(name='boom',
       version=__version__,
