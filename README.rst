@@ -1,5 +1,6 @@
 .. image:: http://blog.ziade.org/boom.png
 
+[![Build Status](https://travis-ci.org/tarekziade/boom.svg?branch=master)](https://travis-ci.org/tarekziade/boom)
 
 **Boom!** is a simple command line tool to send some load to a web app.
 
