@@ -1,4 +1,10 @@
-.. image:: http://blog.ziade.org/boom.png
+
+
+**ATTENTION Boom is going to be replaced by Boom2 and then deprecated**
+
+Follow the progress and join the party here: https://github.com/tarekziade/boom2
+
+**ATTENTION**
 
 **Boom!** is a simple command line tool to send some load to a web app.
 
@@ -17,10 +23,6 @@
 .. image:: https://img.shields.io/pypi/dd/boom.svg
     :target: https://pypi.python.org/pypi/boom/
 
-
-**ATTENTION Boom is going to be replaced by Boom2 and then deprecated**
-
-Follow the progress and join the party here: https://github.com/tarekziade/boom2
 
 Boom! is a script you can use to quickly smoke-test your
 web app deployment. If you need a more complex tool,
