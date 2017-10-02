@@ -17,6 +17,11 @@
 .. image:: https://img.shields.io/pypi/dd/boom.svg
     :target: https://pypi.python.org/pypi/boom/
 
+
+**ATTENTION Boom is going to be replaced by Boom2 and then deprecated**
+
+Follow the progress and join the party here: https://github.com/tarekziade/boom2
+
 Boom! is a script you can use to quickly smoke-test your
 web app deployment. If you need a more complex tool,
 I'd suggest looking at `Funkload <http://funkload.nuxeo.org/>`_
