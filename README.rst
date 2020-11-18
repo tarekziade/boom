@@ -1,8 +1,8 @@
 
 
-**ATTENTION Boom is going to be replaced by Break and then deprecated**
+**ATTENTION Boom is going to be replaced by Salvo and then deprecated**
 
-Follow the progress and join the party here: https://github.com/tarekziade/break
+Follow the progress and join the party here: https://github.com/tarekziade/salvo
 
 **ATTENTION**
 
